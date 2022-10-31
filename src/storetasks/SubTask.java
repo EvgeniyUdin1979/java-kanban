@@ -1,20 +1,19 @@
 package storetasks;
 
-public class SubTask extends Task{
+public class SubTask extends Task {
     EpicTask epicTask;
 
-    public SubTask( String title, String description, int status, EpicTask epicTask) {
-        super(title, description, status);
+    public SubTask(int id, String title, String description, StatusTask status, EpicTask epicTask) {
+        super(id, title, description, status);
         this.epicTask = epicTask;
-        addInEpic();
     }
 
-    public SubTask(String title, int status, EpicTask epicTask) {
-        this(title, "", status, epicTask);
+    public SubTask(int id, String title, StatusTask status, EpicTask epicTask) {
+        this(id, title, "", status, epicTask);
     }
 
-    private void addInEpic(){
-        epicTask.addSubTask(this);
+    private void addInEpic() {
+        epicTask.addSubTaskInList(this);
     }
 
     public EpicTask getEpicTask() {

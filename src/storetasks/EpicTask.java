@@ -1,25 +1,26 @@
 package storetasks;
 
 import java.util.ArrayList;
-import java.util.Optional;
+
+import static storetasks.StatusTask.*;
 
 public class EpicTask extends Task {
     ArrayList<SubTask> subTasks;
 
-    public EpicTask(String title, String description) {
-        super(title, description, StatusTask.New.ordinal());
+    public EpicTask(int id, String title, String description) {
+        super(id, title, description, New);
         subTasks = new ArrayList<>();
     }
 
-    public EpicTask(String title) {
-        this(title, "");
+    public EpicTask(int id, String title) {
+        this(id, title, "");
     }
 
     public ArrayList<SubTask> getSubTasks() {
-        return subTasks;
+        return new ArrayList<>(subTasks);
     }
 
-    public void addSubTask(SubTask subTask) {
+    public void addSubTaskInList(SubTask subTask) {
         subTasks.add(subTask);
         updateStatusEpicTask();
     }
@@ -29,54 +30,56 @@ public class EpicTask extends Task {
         updateStatusEpicTask();
     }
 
-    public void updateSubTask(SubTask subTask) {
-        int taskId = subTask.getId();
-        Optional<SubTask> optionalSubTask = subTasks.stream()
-                .filter(x -> x.getId() == taskId)
-                .findFirst();
-        if (optionalSubTask.isPresent()) {
-            SubTask currentTask = optionalSubTask.get();
-            currentTask.update(subTask);
-            updateStatusEpicTask();
-        }
+    public void updateSubTask() {
+        updateStatusEpicTask();
     }
 
     private void updateStatusEpicTask() {
         if (subTasks.isEmpty()) {
-            setStatus(StatusTask.New.ordinal());
+            setStatus(New);
             return;
         }
 
         boolean done = true;
         boolean fresh = true;
         for (SubTask subTask : subTasks) {
-            if (subTask.getStatus() == StatusTask.Done.ordinal()) {
+            if (subTask.getStatus() == Done) {
                 fresh = false;
-            } else if (subTask.getStatus() == StatusTask.In_progress.ordinal()) {
-                setStatus(StatusTask.In_progress.ordinal());
+            } else if (subTask.getStatus() == In_progress) {
+                setStatus(In_progress);
                 return;
             } else {
                 done = false;
             }
         }
         if (!done && !fresh) {
-            super.setStatus(StatusTask.In_progress.ordinal());
+            super.setStatus(In_progress);
         } else if (!done) {
-            super.setStatus(StatusTask.New.ordinal());
+            super.setStatus(New);
         } else {
-            super.setStatus(StatusTask.Done.ordinal());
+            super.setStatus(Done);
         }
     }
 
     @Override
-    public void setStatus(int status) {
-        System.out.println("изменение статуса напрямую не предусмотрено!");
+    public void setStatus(StatusTask status) {
+        throw new RuntimeException("изменение статуса напрямую не предусмотрено!");
     }
 
     @Override
     public String toString() {
-        return "EpicTask{" + super.toString() +
-                "\n subTasks=" + subTasks.size() +
-                "} ";
+        StringBuilder sb = new StringBuilder();
+        sb.append("EpicTask{")
+                .append(super.toString())
+                .append("\nsubTasks=");
+        if (subTasks.isEmpty()){
+            sb.append(0);
+        }else {
+            subTasks.forEach(subTask -> {
+                sb.append("\n").append(subTask.toString());
+            });
+        }
+        sb.append("}");
+        return sb.toString();
     }
 }

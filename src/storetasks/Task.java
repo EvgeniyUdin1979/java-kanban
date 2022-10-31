@@ -7,23 +7,17 @@ public abstract class Task {
     private final int id;
     private String title;
     private String description;
-    private int status;
+    private StatusTask status;
 
-    public Task(String title, String description, int status) {
-        this.id = GlobalId.getGlobalId();
+    public Task(int id, String title, String description, StatusTask status) {
+        this.id = id;
         this.title = title;
         this.description = description;
         this.status = status;
     }
 
-    protected void update(Task task) {
-        this.title = task.getTitle();
-        this.status = task.getStatus();
-        this.description = task.getDescription();
-    }
-
-    public Task(String title, int status) {
-        this(title, "", status);
+    public Task(int id, String title, StatusTask status) {
+        this(id, title, "", status);
     }
 
     public int getId() {
@@ -46,11 +40,11 @@ public abstract class Task {
         this.description = description;
     }
 
-    public int getStatus() {
+    public StatusTask getStatus() {
         return status;
     }
 
-    public void setStatus(int status) {
+    public void setStatus(StatusTask status) {
         this.status = status;
     }
 
