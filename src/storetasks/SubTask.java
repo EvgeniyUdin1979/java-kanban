@@ -12,10 +12,6 @@ public class SubTask extends Task {
         this(id, title, "", status, epicTask);
     }
 
-    private void addInEpic() {
-        epicTask.addSubTaskInList(this);
-    }
-
     public EpicTask getEpicTask() {
         return epicTask;
     }
