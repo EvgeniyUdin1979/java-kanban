@@ -1,25 +1,25 @@
 package storetasks;
 
 public class SubTask extends Task {
-    EpicTask epicTask;
+    int epicTaskId;
 
-    public SubTask(int id, String title, String description, StatusTask status, EpicTask epicTask) {
-        super(id, title, description, status);
-        this.epicTask = epicTask;
+    public SubTask(String title, String description, StatusTask status, int epicTaskId) {
+        super(title, description, status);
+        this.epicTaskId = epicTaskId;
     }
 
-    public SubTask(int id, String title, StatusTask status, EpicTask epicTask) {
-        this(id, title, "", status, epicTask);
+    public SubTask(String title, StatusTask status, int epicTaskId) {
+        this(title, "", status, epicTaskId);
     }
 
-    public EpicTask getEpicTask() {
-        return epicTask;
+    public int getEpicTaskId() {
+        return epicTaskId;
     }
 
     @Override
     public String toString() {
         return "SubTask{" +
-                "epicTask=" + epicTask.getTitle() +
+                "epicTaskId=" + epicTaskId +
                 "} " + super.toString();
     }
 }

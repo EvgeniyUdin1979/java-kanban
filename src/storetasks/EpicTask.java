@@ -2,69 +2,32 @@ package storetasks;
 
 import java.util.ArrayList;
 
-import static storetasks.StatusTask.*;
+import static storetasks.StatusTask.New;
 
 public class EpicTask extends Task {
-    ArrayList<SubTask> subTasks;
+    ArrayList<Integer> subTasks;
 
-    public EpicTask(int id, String title, String description) {
-        super(id, title, description, New);
+    public EpicTask(String title, String description) {
+        super(title, description, New);
         subTasks = new ArrayList<>();
     }
 
-    public EpicTask(int id, String title) {
-        this(id, title, "");
+    public EpicTask(String title) {
+        this(title, "");
     }
 
-    public ArrayList<SubTask> getSubTasks() {
+    public ArrayList<Integer> getSubTasks() {
         return new ArrayList<>(subTasks);
     }
 
-    public void addSubTaskInList(SubTask subTask) {
-        subTasks.add(subTask);
-        updateStatusEpicTask();
+    public void addSubTaskInList(int subTaskId) {
+        subTasks.add(subTaskId);
     }
 
-    public void removeSubTusk(SubTask subTask) {
-        subTasks.remove(subTask);
-        updateStatusEpicTask();
+    public void removeSubTusk(Integer subTaskId) {
+        subTasks.remove(subTaskId);
     }
 
-    public void updateSubTask() {
-        updateStatusEpicTask();
-    }
-
-    private void updateStatusEpicTask() {
-        if (subTasks.isEmpty()) {
-            setStatus(New);
-            return;
-        }
-
-        boolean done = true;
-        boolean fresh = true;
-        for (SubTask subTask : subTasks) {
-            if (subTask.getStatus() == Done) {
-                fresh = false;
-            } else if (subTask.getStatus() == In_progress) {
-                setStatus(In_progress);
-                return;
-            } else {
-                done = false;
-            }
-        }
-        if (!done && !fresh) {
-            super.setStatus(In_progress);
-        } else if (!done) {
-            super.setStatus(New);
-        } else {
-            super.setStatus(Done);
-        }
-    }
-
-    @Override
-    public void setStatus(StatusTask status) {
-        throw new RuntimeException("изменение статуса напрямую не предусмотрено!");
-    }
 
     @Override
     public String toString() {
@@ -72,12 +35,10 @@ public class EpicTask extends Task {
         sb.append("EpicTask{")
                 .append(super.toString())
                 .append("\nsubTasks=");
-        if (subTasks.isEmpty()){
+        if (subTasks.isEmpty()) {
             sb.append(0);
-        }else {
-            subTasks.forEach(subTask -> {
-                sb.append("\n").append(subTask.toString());
-            });
+        } else {
+            subTasks.forEach(subTask -> sb.append("\n").append("SubTask # ").append(subTask.toString()));
         }
         sb.append("}");
         return sb.toString();

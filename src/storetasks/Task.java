@@ -4,20 +4,24 @@ import java.util.Objects;
 
 
 public abstract class Task {
-    private final int id;
+    private int id;
     private String title;
     private String description;
     private StatusTask status;
 
-    public Task(int id, String title, String description, StatusTask status) {
-        this.id = id;
+    public Task(String title, String description, StatusTask status) {
+        this.id = 0;
         this.title = title;
         this.description = description;
         this.status = status;
     }
 
-    public Task(int id, String title, StatusTask status) {
-        this(id, title, "", status);
+    public Task(String title, StatusTask status) {
+        this(title, "", status);
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getId() {
