@@ -9,34 +9,32 @@ import java.util.List;
 
 import static storetasks.StatusTask.*;
 
-public class Manager {
+public class InMemoryTaskManager implements TaskManager {
     private final HashMap<Integer, NormalTask> normalTasks;
     private final HashMap<Integer, EpicTask> epicTasks;
     private final HashMap<Integer, SubTask> subTasks;
+    private final List<Task> history;
     private int globalId = 1;
 
-    public Manager() {
+    public InMemoryTaskManager() {
         normalTasks = new HashMap<>();
         epicTasks = new HashMap<>();
         subTasks = new HashMap<>();
+        history = new ArrayList<>();
     }
 
-    public List<Task> getAllTask() {
-        ArrayList<Task> listTasks = new ArrayList<>(normalTasks.values());
-        listTasks.addAll(epicTasks.values());
-        listTasks.addAll(subTasks.values());//Добавлено только для проверки правильного удаления EpicTask.
-        return listTasks;
-    }
-
-    public List<NormalTask> getAllNormalTask() {
+    @Override
+    public List<NormalTask> getAllNormalTasks() {
         return new ArrayList<>(normalTasks.values());
     }
 
-    public List<EpicTask> getAllEpicTask() {
+    @Override
+    public List<EpicTask> getAllEpicTasks() {
         return new ArrayList<>(epicTasks.values());
     }
 
-    public List<SubTask> getAllSubTask() {
+    @Override
+    public List<SubTask> getAllSubTasks() {
         return new ArrayList<>(subTasks.values());
     }
 
@@ -44,14 +42,15 @@ public class Manager {
         return globalId++;
     }
 
+    @Override
     public void clearAllTasks() {
         normalTasks.clear();
         epicTasks.clear();
         subTasks.clear();
     }
 
-
-    public boolean deleteByIdNormalTask(int id) {
+    @Override
+    public boolean deleteNormalTaskById(int id) {
         if (!normalTasks.containsKey(id)) {
             return false;
         }
@@ -59,7 +58,8 @@ public class Manager {
         return true;
     }
 
-    public boolean deleteByIdEpicTask(int id) {
+    @Override
+    public boolean deleteEpicTaskById(int id) {
         if (!epicTasks.containsKey(id)) {
             return false;
         }
@@ -69,7 +69,8 @@ public class Manager {
         return true;
     }
 
-    public boolean deleteByIdSubTask(int id) {
+    @Override
+    public boolean deleteSubTaskById(int id) {
         if (!subTasks.containsKey(id)) {
             return false;
         }
@@ -81,17 +82,25 @@ public class Manager {
         return true;
     }
 
-
+    @Override
     public NormalTask getByIdNormalTask(int id) {
-        return normalTasks.get(id);
+        NormalTask normalTask = normalTasks.get(id);
+        addTaskInHistory(normalTask);
+        return normalTask;
     }
 
+    @Override
     public EpicTask getByIdEpicTask(int id) {
-        return epicTasks.get(id);
+        EpicTask epicTask = epicTasks.get(id);
+        addTaskInHistory(epicTask);
+        return epicTask;
     }
 
+    @Override
     public SubTask getByIdSubTask(int id) {
-        return subTasks.get(id);
+        SubTask subTask = subTasks.get(id);
+        addTaskInHistory(subTask);
+        return subTask;
     }
 
     public void addNormalTask(NormalTask task) {
@@ -125,6 +134,7 @@ public class Manager {
         normalTasks.put(task.getId(), task);
     }
 
+    @Override
     public void upgradeSubTask(SubTask task) {
         subTasks.put(task.getId(), task);
         EpicTask epicTask = epicTasks.get(task.getEpicTaskId());
@@ -141,7 +151,7 @@ public class Manager {
         EpicTask oldTask = epicTasks.get(task.getId());
         oldTask.getSubTasks().forEach(subTaskId -> {
             if (!task.getSubTasks().contains(subTaskId)) {
-                deleteByIdSubTask(subTaskId);
+                deleteSubTaskById(subTaskId);
             }
         });
         updateStatusEpicTask(task);
@@ -176,5 +186,17 @@ public class Manager {
         }
     }
 
+    @Override
+    public List<Task> getHistory() {
+        return new ArrayList<>(history);
+    }
 
+    private void addTaskInHistory(Task task) {
+        if (history.size() < 10) {
+            history.add(task);
+        } else {
+            history.remove(0);
+            history.add(task);
+        }
+    }
 }
