@@ -69,12 +69,16 @@ public class Main {
         manager.upgradeEpicTask(epicTask1);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Изменение саб №5 и эпик №2");
-//
-//        if (manager.deleteNormalTaskById(1)) {
-//            System.out.println("Удаление прошло успешно!");
-//        }
-//        getAllTasks().forEach(System.out::println);
-//        System.out.println("---------------------------------------------------Удаление нормал №1");
+
+        if (manager.deleteNormalTaskById(1)) {
+            System.out.println("Удаление прошло успешно!");
+        }
+        getAllTasks().forEach(System.out::println);
+        System.out.println("---------------------------------------------------Удаление нормал №1");
+        NormalTask normalTask = new NormalTask("normal1", New);
+        manager.addNormalTask(normalTask);
+        getAllTasks().forEach(System.out::println);
+        System.out.println("-----------------------------------------------Добавление нормал для проверки");
 
         if (manager.deleteSubTaskById(3)) {
             System.out.println("Удаление прошло успешно!");
@@ -90,9 +94,9 @@ public class Main {
         Random rnd = new Random();
         Task task;
         for (int i = 0; i < 30; i++) {
-            switch (rnd.nextInt(3)){
+            switch (rnd.nextInt(3)) {
                 case 0:
-                    task= manager.getByIdNormalTask(1);
+                    task = manager.getByIdNormalTask(8);
                     break;
                 case 1:
                     task = manager.getByIdEpicTask(6);
@@ -107,18 +111,5 @@ public class Main {
 
             System.out.println(count++ + " : " + taskInHistory);
         }
-
-//        EpicTask epicTaskT_1 = manager.getByIdEpicTask(6);
-//        SubTask subTaskT_1 = new SubTask("test1", New, epicTaskT_1.getId());
-//        SubTask subTaskT_2 = new SubTask("test2", New, epicTaskT_1.getId());
-//        manager.addSubTask(subTaskT_1);
-//        manager.addSubTask(subTaskT_2);
-//        //для тест id эпика меняется через дебагер, хотел через дебагер удалить саб из эпика, но не нашел как сделать
-//        //Если не менять id будет проверка на изменение не существующего эпика
-//        EpicTask epicTaskT_2 = new EpicTask("для теста обновления с другим количеством сабов");
-//        manager.upgradeEpicTask(epicTaskT_2);
-//        getAllTasks().forEach(System.out::println);
-
-
     }
 }
