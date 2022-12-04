@@ -53,6 +53,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (!normalTasks.containsKey(id)) {
             return false;
         }
+        history.remove(normalTasks.get(id));
         normalTasks.remove(id);
         return true;
     }
@@ -63,7 +64,11 @@ public class InMemoryTaskManager implements TaskManager {
             return false;
         }
         EpicTask task = epicTasks.get(id);
-        task.getSubTasks().forEach(subTasks::remove);
+        task.getSubTasks().forEach(key -> {
+            history.remove(subTasks.get(key));
+            subTasks.remove(key);
+        });
+        history.remove(task);
         epicTasks.remove(id);
         return true;
     }
@@ -77,6 +82,7 @@ public class InMemoryTaskManager implements TaskManager {
         EpicTask epicTask = epicTasks.get(subTask.getEpicTaskId());
         epicTask.removeSubTusk(id);
         subTasks.remove(id);
+        history.remove(subTask);
         updateStatusEpicTask(epicTask);
         return true;
     }

@@ -1,28 +1,31 @@
 import storetasks.Task;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    List<Task> history;
+    CustomLinkedList<Task> history;
 
     public InMemoryHistoryManager() {
-        history = new ArrayList<>();
+        history = new CustomLinkedList<>();
     }
 
     @Override
     public void add(Task task) {
-        if (history.size() < 10) {
-            history.add(task);
-        } else {
-            history.remove(0);
-            history.add(task);
+        if (!history.add(task)) {
+            throw new RuntimeException("Проблема с добавлением!!!");
         }
-
     }
 
     @Override
     public List<Task> getHistory() {
-        return new ArrayList<>(history);
+        return history.getHistory();
+    }
+
+    @Override
+    public void remove(Task task) {
+
+        if (!history.remove(task)) {
+            throw new RuntimeException("Проблема с удалением!!!");
+        }
     }
 }

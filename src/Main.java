@@ -41,6 +41,7 @@ public class Main {
     public static void main(String[] args) {
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Начальная распечатка");
+        printHistory();
 
         NormalTask normal1 = manager.getByIdNormalTask(1);
         normal1.setStatus(In_progress);
@@ -48,18 +49,21 @@ public class Main {
         manager.upgradeNormalTask(normal1);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Изменение нормал №1");
+        printHistory();
 
         SubTask subTask1 = manager.getByIdSubTask(3);
         subTask1.setStatus(In_progress);
         manager.upgradeSubTask(subTask1);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Изменение саб №3");
+        printHistory();
 
         SubTask subTask2 = manager.getByIdSubTask(4);
         subTask2.setStatus(Done);
         manager.upgradeSubTask(subTask2);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Изменение саб №4");
+        printHistory();
 
         SubTask subTask3 = manager.getByIdSubTask(5);
         subTask3.setStatus(Done);
@@ -69,28 +73,34 @@ public class Main {
         manager.upgradeEpicTask(epicTask1);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Изменение саб №5 и эпик №2");
+        printHistory();
 
         if (manager.deleteNormalTaskById(1)) {
             System.out.println("Удаление прошло успешно!");
         }
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Удаление нормал №1");
+        printHistory();
+
         NormalTask normalTask = new NormalTask("normal1", New);
         manager.addNormalTask(normalTask);
         getAllTasks().forEach(System.out::println);
         System.out.println("-----------------------------------------------Добавление нормал для проверки");
+        printHistory();
 
         if (manager.deleteSubTaskById(3)) {
             System.out.println("Удаление прошло успешно!");
         }
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Удаление саб №3");
+        printHistory();
 
         if (manager.deleteEpicTaskById(2)) {
             System.out.println("Удаление прошло успешно!");
         }
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Удаление эпик №2");
+        printHistory();
         Random rnd = new Random();
         Task task;
         for (int i = 0; i < 30; i++) {
@@ -106,10 +116,16 @@ public class Main {
                     break;
             }
         }
+        System.out.println("---------------------------------------------------Трогаю оставшиеся №6, №7, №8");
+        printHistory();
+    }
+
+    private static void printHistory() {
         int count = 0;
         for (Task taskInHistory : manager.getHistory()) {
 
-            System.out.println(count++ + " : " + taskInHistory);
+            System.out.print(count++ + " : id - " + taskInHistory.getId() + " | ");
         }
+        System.out.println("***history**");
     }
 }
