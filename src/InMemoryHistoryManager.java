@@ -3,10 +3,10 @@ import storetasks.Task;
 import java.util.List;
 
 public class InMemoryHistoryManager implements HistoryManager {
-    CustomLinkedList<Task> history;
+    CustomLinkedList history;
 
     public InMemoryHistoryManager() {
-        history = new CustomLinkedList<>();
+        history = new CustomLinkedList();
     }
 
     @Override
@@ -28,4 +28,6 @@ public class InMemoryHistoryManager implements HistoryManager {
             throw new RuntimeException("Проблема с удалением!!!");
         }
     }
+
+
 }

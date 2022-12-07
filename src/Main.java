@@ -118,6 +118,7 @@ public class Main {
         }
         System.out.println("---------------------------------------------------Трогаю оставшиеся №6, №7, №8");
         printHistory();
+        getAllTasks().forEach(System.out::println);
     }
 
     private static void printHistory() {

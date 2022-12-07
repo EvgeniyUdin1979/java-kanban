@@ -1,10 +1,12 @@
+import storetasks.Task;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-public class CustomLinkedList<T> {
-    private final HashMap<T, Node> historyMap;
+public class CustomLinkedList {
+    private final HashMap<Integer, Node> historyMap;
     private int size;
     private Node head;
     private Node tail;
@@ -13,70 +15,65 @@ public class CustomLinkedList<T> {
         historyMap = new HashMap<>();
     }
 
-    public boolean add(T t) {
-        if (historyMap.isEmpty()) {
+    public boolean add(Task t) {
+        if (historyMap.containsKey(t.getId())) {
+            remove(t);
+        }
+
+        if (historyMap.isEmpty()) {//данное ветвление добавляет начальный нод и он уникален
             Node newNode = new Node(null, t, null);
             head = newNode;
             tail = newNode;
-            historyMap.put(t, newNode);
+            historyMap.put(t.getId(), newNode);
             size++;
             return true;
-        } else {
-            if (historyMap.containsKey(t)) {
-                Node oldNode = historyMap.get(t);
-                if (oldNode.equals(tail)) {
-                    return true;
-                } else if (oldNode.equals(head)) {
-                    Node newHead = oldNode.next;
-                    newHead.prev = null;
-                    head = newHead;
-                    historyMap.remove(t);
-                    size--;
-                } else {
-                    remove(t);
-                }
-            }
+        }else {
             Node newTail = new Node(tail, t, null);
             tail.next = newTail;
             tail = newTail;
-            historyMap.put(t, newTail);
+            historyMap.put(t.getId(), newTail);
             size++;
             return true;
         }
     }
 
-    public boolean remove(T t) {
-        if (historyMap.isEmpty() || t == null || !historyMap.containsKey(t)) {
+
+    public boolean remove(Task t) {
+        if (historyMap.isEmpty() || t == null || !historyMap.containsKey(t.getId())) {
             return false;
         }
-        Node removedNode = historyMap.get(t);
-        if (removedNode.equals(tail)) {
+        if (historyMap.size() == 1){
+            historyMap.remove(t.getId());
+            return true;
+        }
+        Node removedNode = historyMap.get(t.getId());
+        if (removedNode.entry.getId() == tail.entry.getId()) {
             Node newTail = removedNode.prev;
             newTail.next = null;
             tail = newTail;
-            historyMap.remove(t);
+            historyMap.remove(t.getId());
             size--;
             return true;
-        } else if (removedNode.equals(head)) {
+        } else if (removedNode.entry.getId() == head.entry.getId()) {
             Node newHead = removedNode.next;
             newHead.prev = null;
             head = newHead;
-            historyMap.remove(t);
+            historyMap.remove(t.getId());
             size--;
         } else {
             Node prev = removedNode.prev;
             Node next = removedNode.next;
             prev.next = next;
             next.prev = prev;
-            historyMap.remove(t);
+            historyMap.remove(t.getId());
             size--;
             return true;
         }
         return false;
     }
 
-    public List<T> getHistory() {
-        List<T> list = new ArrayList<>();
+    public List<Task> getHistory() {
+        List<Task> list = new ArrayList<>();
         for (Node i = head; i != null; i = i.next) {
             list.add(i.entry);
         }
@@ -86,9 +83,9 @@ public class CustomLinkedList<T> {
     private class Node {
         Node prev;
         Node next;
-        T entry;
+        Task entry;
 
-        public Node(Node prev, T entry, Node next) {
+        public Node(Node prev, Task entry, Node next) {
             this.prev = prev;
             this.entry = entry;
             this.next = next;
@@ -99,7 +96,7 @@ public class CustomLinkedList<T> {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Node node = (Node) o;
-            return Objects.equals(entry, node.entry);
+            return entry.equals(node.entry);
         }
 
         @Override
