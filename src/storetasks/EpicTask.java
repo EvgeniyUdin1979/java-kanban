@@ -16,6 +16,11 @@ public class EpicTask extends Task {
         this(title, "");
     }
 
+    public EpicTask(String title, String description, StatusTask status) {
+        super(title, description, status);
+        subTasks = new ArrayList<>();
+    }
+
     public ArrayList<Integer> getSubTasks() {
         return new ArrayList<>(subTasks);
     }

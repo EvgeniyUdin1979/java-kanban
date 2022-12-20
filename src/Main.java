@@ -118,7 +118,17 @@ public class Main {
         }
         System.out.println("---------------------------------------------------Трогаю оставшиеся №6, №7, №8");
         printHistory();
+        EpicTask epicTask = new EpicTask("twoEpic");
+        manager.addEpicTask(epicTask);
+        EpicTask epicTaskTwo = manager.getByIdEpicTask(9);
+        SubTask subTask_1 = new SubTask("firstSub1", New, epicTaskTwo.getId());
+        SubTask subTask_2 = new SubTask("firstSub2", New, epicTaskTwo.getId());
+        SubTask subTask_3 = new SubTask("firstSub3", New, epicTaskTwo.getId());
+        manager.addSubTask(subTask_1);
+        manager.addSubTask(subTask_2);
+        manager.addSubTask(subTask_3);
         getAllTasks().forEach(System.out::println);
+        System.out.println("---------------------------------------------------Добавляю эпик №9 и сабТаски №10, 11, 12");
     }
 
     private static void printHistory() {

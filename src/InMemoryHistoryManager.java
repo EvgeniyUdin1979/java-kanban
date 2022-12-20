@@ -11,9 +11,7 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     @Override
     public void add(Task task) {
-        if (!history.add(task)) {
-            throw new RuntimeException("Проблема с добавлением!!!");
-        }
+        history.add(task);
     }
 
     @Override
@@ -22,12 +20,12 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     @Override
-    public void remove(Task task) {
-
-        if (!history.remove(task)) {
-            throw new RuntimeException("Проблема с удалением!!!");
-        }
+    public int size() {
+        return history.size();
     }
 
-
+    @Override
+    public void remove(Task task) {
+        history.remove(task);
+    }
 }

@@ -10,10 +10,10 @@ import java.util.List;
 import static storetasks.StatusTask.*;
 
 public class InMemoryTaskManager implements TaskManager {
-    private final HashMap<Integer, NormalTask> normalTasks;
-    private final HashMap<Integer, EpicTask> epicTasks;
-    private final HashMap<Integer, SubTask> subTasks;
-    private final HistoryManager history = Managers.getDefaultHistory();
+    protected final HashMap<Integer, NormalTask> normalTasks;
+    protected final HashMap<Integer, EpicTask> epicTasks;
+    protected final HashMap<Integer, SubTask> subTasks;
+    protected final HistoryManager history = Managers.getDefaultHistory();
     private int globalId = 1;
 
     public InMemoryTaskManager() {
