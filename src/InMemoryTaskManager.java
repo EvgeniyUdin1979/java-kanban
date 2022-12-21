@@ -14,7 +14,7 @@ public class InMemoryTaskManager implements TaskManager {
     protected final HashMap<Integer, EpicTask> epicTasks;
     protected final HashMap<Integer, SubTask> subTasks;
     protected final HistoryManager history = Managers.getDefaultHistory();
-    private int globalId = 1;
+    protected int globalId = 1;
 
     public InMemoryTaskManager() {
         normalTasks = new HashMap<>();

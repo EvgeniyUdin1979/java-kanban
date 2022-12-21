@@ -1,3 +1,5 @@
+import storetasks.NormalTask;
+import storetasks.StatusTask;
 import storetasks.Task;
 
 import java.nio.file.Path;
@@ -5,12 +7,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestFileBackedTaskManager {
+    static {
+        Main.main(new String[]{});
+    }
+
     static TaskManager manager = FileBackedTasksManager.loadFromFile(Path.of("history.csv"));
 
     public static void main(String[] args) {
-        Main.main(new String[]{});
         getAllTasks().forEach(System.out::println);
         System.out.println("TestFileBackedTaskManager----------------------------------Восстановленая распечатка");
+        printHistory();
+        NormalTask normalTask = new NormalTask("NormalTest", "Проверка", StatusTask.New);
+        manager.addNormalTask(normalTask);
+        getAllTasks().forEach(System.out::println);
+        System.out.println("TestFileBackedTaskManager----------------------------------Распечатка после добавления");
         printHistory();
     }
 
