@@ -1,5 +1,6 @@
 package storetasks;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import static storetasks.StatusTask.New;
@@ -14,6 +15,11 @@ public class EpicTask extends Task {
 
     public EpicTask(String title) {
         this(title, "");
+    }
+
+    public EpicTask(String title, String description, StatusTask status, LocalDateTime startTime, long duration) {
+        super(title, description, status, startTime, duration);
+        subTasks = new ArrayList<>();
     }
 
     public EpicTask(String title, String description, StatusTask status) {

@@ -24,11 +24,11 @@ public interface TaskManager {
 
     SubTask getByIdSubTask(int Id);
 
-    boolean deleteNormalTaskById(int Id);
+    void deleteNormalTaskById(int Id);
 
-    boolean deleteEpicTaskById(int Id);
+    void deleteEpicTaskById(int Id);
 
-    boolean deleteSubTaskById(int Id);
+    void deleteSubTaskById(int Id);
 
     void upgradeNormalTask(NormalTask task);
 
@@ -37,6 +37,8 @@ public interface TaskManager {
     void upgradeSubTask(SubTask task);
 
     void clearAllTasks();
+
+    List<Task> getPrioritizedTasks();
 
     List<Task> getHistory();
 

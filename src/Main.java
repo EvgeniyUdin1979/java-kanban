@@ -3,6 +3,7 @@ import storetasks.NormalTask;
 import storetasks.SubTask;
 import storetasks.Task;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -10,23 +11,23 @@ import java.util.Random;
 import static storetasks.StatusTask.*;
 
 public class Main {
-    static TaskManager manager = Managers.getDefault();
+    static TaskManager manager =Managers.getDefault();
 
     static {
-        NormalTask normalTask = new NormalTask("firstNormal", New);
+        NormalTask normalTask = new NormalTask("firstNormal", New, LocalDateTime.now(),10L);
         manager.addNormalTask(normalTask);
         EpicTask epicTask = new EpicTask("firstEpic");
         manager.addEpicTask(epicTask);
         EpicTask epicTaskOne = manager.getByIdEpicTask(2);
-        SubTask subTask1 = new SubTask("firstSub1", New, epicTaskOne.getId());
-        SubTask subTask2 = new SubTask("firstSub2", New, epicTaskOne.getId());
+        SubTask subTask1 = new SubTask("firstSub1", New, LocalDateTime.now().plusMinutes(10), 10L,epicTaskOne.getId());
+        SubTask subTask2 = new SubTask("firstSub2", New,LocalDateTime.now().plusMinutes(50), 20L,epicTaskOne.getId());
         SubTask subTask3 = new SubTask("firstSub3", New, epicTaskOne.getId());
         manager.addSubTask(subTask1);
         manager.addSubTask(subTask2);
         manager.addSubTask(subTask3);
         EpicTask epicTask2 = new EpicTask("secondEpic");
         manager.addEpicTask(epicTask2);
-        EpicTask epicTaskTwo = manager.getByIdEpicTask(6);
+        EpicTask epicTaskTwo = manager.getByIdEpicTask(epicTask2.getId());
         SubTask subTask4 = new SubTask("firstSub4", New, epicTaskTwo.getId());
         manager.addSubTask(subTask4);
     }
@@ -42,6 +43,7 @@ public class Main {
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Начальная распечатка");
         printHistory();
+        manager.getPrioritizedTasks().forEach(x -> System.out.println(x.getId() + " : " + x.getStartTime() + " : " + x.getEndTime()));
 
         NormalTask normal1 = manager.getByIdNormalTask(1);
         normal1.setStatus(In_progress);
@@ -75,9 +77,7 @@ public class Main {
         System.out.println("---------------------------------------------------Изменение саб №5 и эпик №2");
         printHistory();
 
-        if (manager.deleteNormalTaskById(1)) {
-            System.out.println("Удаление прошло успешно!");
-        }
+        manager.deleteNormalTaskById(1);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Удаление нормал №1");
         printHistory();
@@ -88,16 +88,12 @@ public class Main {
         System.out.println("-----------------------------------------------Добавление нормал для проверки");
         printHistory();
 
-        if (manager.deleteSubTaskById(3)) {
-            System.out.println("Удаление прошло успешно!");
-        }
+        manager.deleteSubTaskById(3);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Удаление саб №3");
         printHistory();
 
-        if (manager.deleteEpicTaskById(2)) {
-            System.out.println("Удаление прошло успешно!");
-        }
+        manager.deleteEpicTaskById(2);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Удаление эпик №2");
         printHistory();
@@ -121,14 +117,20 @@ public class Main {
         EpicTask epicTask = new EpicTask("twoEpic");
         manager.addEpicTask(epicTask);
         EpicTask epicTaskTwo = manager.getByIdEpicTask(9);
-        SubTask subTask_1 = new SubTask("firstSub1", New, epicTaskTwo.getId());
-        SubTask subTask_2 = new SubTask("firstSub2", New, epicTaskTwo.getId());
-        SubTask subTask_3 = new SubTask("firstSub3", New, epicTaskTwo.getId());
+        SubTask subTask_1 = new SubTask("firstSub1", New, LocalDateTime.now().plusMinutes(60), 15L,epicTaskTwo.getId());
+        SubTask subTask_2 = new SubTask("firstSub2", New, LocalDateTime.now().plusMinutes(80), 15L,epicTaskTwo.getId());
+        SubTask subTask_3 = new SubTask("firstSub3", New, LocalDateTime.now().plusMinutes(100), 15L,epicTaskTwo.getId());
         manager.addSubTask(subTask_1);
         manager.addSubTask(subTask_2);
         manager.addSubTask(subTask_3);
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Добавляю эпик №9 и сабТаски №10, 11, 12");
+        manager.getPrioritizedTasks().forEach(x -> System.out.println(x.getId()
+                + " : "
+                + x.getStartTime()
+                + " : "
+                + x.getEndTime()));
+
     }
 
     private static void printHistory() {
