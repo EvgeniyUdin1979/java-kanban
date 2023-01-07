@@ -1,0 +1,9 @@
+Normal,0
+id,title,description,status,startTime,duration
+Epic,0
+id,title,description,status,startTime,duration,subId
+Sub,0
+id,title,description,status,startTime,duration,epicId
+History,2
+id
+2,6

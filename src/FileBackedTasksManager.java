@@ -145,6 +145,15 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     }
                     for (int i = 0; i < Integer.parseInt(elementLine[1]); i++) {
                         int id = Integer.parseInt(elementsLineHistory[i]);
+                        try {
+                            if (!addedTasks.containsKey(id)){
+                                throw new RuntimeException("Таск " + id + " не был восстановлен из файла!");
+                            }
+                        }catch (RuntimeException e){
+                            e.printStackTrace();
+                            currentLine++;
+                            continue;
+                        }
                         manager.history.add(addedTasks.get(id));
                     }
                     currentLine++;

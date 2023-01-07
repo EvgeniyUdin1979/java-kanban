@@ -1,0 +1,15 @@
+Normal,1
+id,title,description,status,startTime,duration
+1,firstNormal,,New,1673031989903,15
+Epic,2
+id,title,description,status,startTime,duration,subId
+2,firstEpic,,New,1673032888903,30,3,4,5
+6,secondEpic,,New,null,0
+Sub,3
+id,title,description,status,startTime,duration,epicId
+3,firstSub1,,New,1673032889903,15,2
+4,firstSub2,,New,1673033789903,15,2
+5,firstSub3,,New,null,0,2
+History,2
+id
+2,6

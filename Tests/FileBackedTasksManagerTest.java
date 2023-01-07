@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import storetasks.*;
+import storetasks.Task;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,6 +9,7 @@ import java.util.List;
 
 class FileBackedTasksManagerTest extends TaskManagerTest {
     FileBackedTasksManager manager;
+
     public FileBackedTasksManagerTest() {
         manager = new FileBackedTasksManager();
         super.setManager(manager);
@@ -33,27 +34,26 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "2,6";
-        Assertions.assertEquals(str,loadCSVForTest());
+        Assertions.assertEquals(str, loadCSVForTest());
 
     }
-    private String loadCSVForTest(){
+
+    private String loadCSVForTest() {
         try {
             return Files.readString(Paths.get("history.csv"));
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-
-
     @Test
     void testLoadFromFile() {
-       FileBackedTasksManager testManager =  FileBackedTasksManager.loadFromFile(Paths.get("history.csv"));
+        FileBackedTasksManager testManager = FileBackedTasksManager.loadFromFile(Paths.get("testhistory.csv"));
         List<Integer> testNormal = List.of(1);
-        List<Integer> testEpic = List.of(2,6);
-        List<Integer> testSub = List.of(3,4,5,7);
-        List<Task> testHistory = List.of(manager.getByIdEpicTask(2),manager.getByIdEpicTask(6));
+        List<Integer> testEpic = List.of(2, 6);
+        List<Integer> testSub = List.of(3, 4, 5, 7);
+        List<Task> testHistory = List.of(manager.getByIdEpicTask(2), manager.getByIdEpicTask(6));
         List<Task> testHistoryFromManager = testManager.getHistory();
         Assertions.assertTrue(testManager.getAllNormalTasks().stream()
                 .anyMatch(task -> testNormal.contains(task.getId())));
@@ -61,7 +61,7 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 .anyMatch(task -> testEpic.contains(task.getId())));
         Assertions.assertTrue(testManager.getAllSubTasks().stream()
                 .anyMatch(task -> testSub.contains(task.getId())));
-        Assertions.assertEquals(testHistory,testHistoryFromManager);
+        Assertions.assertEquals(testHistory, testHistoryFromManager);
     }
 
     @Test
@@ -73,8 +73,29 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
     }
 
     @Test
+    void testLoadFromFileIsEmptyEpic() {
+        FileBackedTasksManager testManager =
+                FileBackedTasksManager.loadFromFile(Paths.get("testhistoryisemptyepic.csv"));
+
+        Assertions.assertTrue(testManager.getByIdEpicTask(6).getSubTasks().isEmpty()
+                ,"Эпик id 6 имеет не пустой лист сабов");
+        Assertions.assertTrue(testManager.epicTasks.containsKey(6)
+                ,"Эпик id 6 отсутствует в мапе эпиков");
+    }
+
+    @Test
+    void testLoadFromFileHistoryWithoutTask() {
+        FileBackedTasksManager testManager =
+                FileBackedTasksManager.loadFromFile(Paths.get("testhistorywithouttassk.csv"));
+
+        Assertions.assertTrue(testManager.getAllNormalTasks().isEmpty(),"");
+        Assertions.assertTrue(testManager.getAllSubTasks().isEmpty(),"");
+        Assertions.assertTrue(testManager.getAllEpicTasks().isEmpty(),"");
+    }
+
+    @Test
     void testDeleteNormalTaskById() {
-        manager.deleteNormalTaskById(1);
+        super.testDeleteNormalTaskById();
         String testCSV = "Normal,0\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "Epic,2\n" +
@@ -90,12 +111,12 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest());
     }
 
     @Test
     void testDeleteEpicTaskById() {
-        manager.deleteEpicTaskById(2);
+        super.testDeleteEpicTaskById();
         String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
@@ -108,13 +129,13 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,1\n" +
                 "id\n" +
                 "6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest());
     }
 
     @Test
     void testDeleteSubTaskById() {
-        manager.deleteSubTaskById(3);
-        String testCSV ="Normal,1\n" +
+        super.testDeleteSubTaskById();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
                 "Epic,2\n" +
@@ -128,19 +149,18 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "7,firstSub4,,New,null,0,6\n" +
                 "History,2\n" +
                 "id\n" +
-                "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
+                "6,2";
+        Assertions.assertEquals(testCSV, loadCSVForTest());
 
     }
 
     @Test
     void testAddNormalTask() {
-        NormalTask testNormalTask = new NormalTask("test", "testtest", StatusTask.New);
-        manager.addNormalTask(testNormalTask);
-        String testCSV ="Normal,2\n" +
+        super.testAddNormalTask();
+        String testCSV = "Normal,2\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
-                "8,test,testtest,New,null,0\n" +
+                "8,normalTest,test test,New,1673035589903,20\n" +
                 "Epic,2\n" +
                 "id,title,description,status,startTime,duration,subId\n" +
                 "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
@@ -151,71 +171,66 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "4,firstSub2,,New,1673033789903,15,2\n" +
                 "5,firstSub3,,New,null,0,2\n" +
                 "7,firstSub4,,New,null,0,6\n" +
-                "History,2\n" +
+                "History,3\n" +
                 "id\n" +
-                "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
+                "2,6,8";
+        Assertions.assertEquals(testCSV, loadCSVForTest());
 
     }
 
     @Test
     void testAddEpicTask() {
-        EpicTask testEpicTask = new EpicTask("testEpic","testtest");
-        manager.addEpicTask(testEpicTask);
-        String testCSV ="Normal,1\n" +
+        super.testAddEpicTask();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
                 "Epic,3\n" +
                 "id,title,description,status,startTime,duration,subId\n" +
                 "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
                 "6,secondEpic,,New,null,0,7\n" +
-                "8,testEpic,testtest,New,null,0\n" +
+                "8,epicTest,test test,New,null,0\n" +
                 "Sub,4\n" +
                 "id,title,description,status,startTime,duration,epicId\n" +
                 "3,firstSub1,,New,1673032889903,15,2\n" +
                 "4,firstSub2,,New,1673033789903,15,2\n" +
                 "5,firstSub3,,New,null,0,2\n" +
                 "7,firstSub4,,New,null,0,6\n" +
-                "History,2\n" +
+                "History,3\n" +
                 "id\n" +
-                "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
-
+                "2,6,8";
+        Assertions.assertEquals(testCSV, loadCSVForTest());
     }
 
     @Test
     void testAddSubTask() {
-        SubTask testSubTask = new SubTask("testSubTask","testtest",StatusTask.In_progress,6);
-        manager.addSubTask(testSubTask);
-        String testCSV ="Normal,1\n" +
+        super.testAddSubTask();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
                 "Epic,2\n" +
                 "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,In_progress,null,0,7,8\n" +
+                "2,firstEpic,,New,1673032888903,30,3,4,5,8\n" +
+                "6,secondEpic,,New,null,0,7\n" +
                 "Sub,5\n" +
                 "id,title,description,status,startTime,duration,epicId\n" +
                 "3,firstSub1,,New,1673032889903,15,2\n" +
                 "4,firstSub2,,New,1673033789903,15,2\n" +
                 "5,firstSub3,,New,null,0,2\n" +
                 "7,firstSub4,,New,null,0,6\n" +
-                "8,testSubTask,testtest,In_progress,null,0,6\n" +
-                "History,2\n" +
+                "8,subTaskForTest,test test,New,null,0,2\n" +
+                "History,3\n" +
                 "id\n" +
-                "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
+                "6,8,2";
+        Assertions.assertEquals(testCSV, loadCSVForTest());
 
     }
 
     @Test
     void testUpgradeNormalTask() {
-        NormalTask testNormalTask = new NormalTask("testNormal","testtest",StatusTask.In_progress);
-        testNormalTask.setId(1);
-        manager.upgradeNormalTask(testNormalTask);
-        String testCSV ="Normal,1\n" +
+      super.testUpgradeNormalTask();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
-                "1,testNormal,testtest,In_progress,null,0\n" +
+                "1,testNormaltest,testtest,In_progress,null,0\n" +
                 "Epic,2\n" +
                 "id,title,description,status,startTime,duration,subId\n" +
                 "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
@@ -226,19 +241,17 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "4,firstSub2,,New,1673033789903,15,2\n" +
                 "5,firstSub3,,New,null,0,2\n" +
                 "7,firstSub4,,New,null,0,6\n" +
-                "History,2\n" +
+                "History,3\n" +
                 "id\n" +
-                "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
+                "2,6,1";
+        Assertions.assertEquals(testCSV, loadCSVForTest());
 
     }
 
     @Test
     void testUpgradeSubTask() {
-        SubTask testSubTask = new SubTask("testSubTask","testtest",StatusTask.In_progress,2);
-        testSubTask.setId(3);
-        manager.upgradeSubTask(testSubTask);
-        String testCSV ="Normal,1\n" +
+        super.testUpgradeSubTask();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
                 "Epic,2\n" +
@@ -247,42 +260,39 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "6,secondEpic,,New,null,0,7\n" +
                 "Sub,4\n" +
                 "id,title,description,status,startTime,duration,epicId\n" +
-                "3,testSubTask,testtest,In_progress,null,0,2\n" +
+                "3,subTest,test,In_progress,null,0,2\n" +
                 "4,firstSub2,,New,1673033789903,15,2\n" +
                 "5,firstSub3,,New,null,0,2\n" +
                 "7,firstSub4,,New,null,0,6\n" +
-                "History,2\n" +
+                "History,3\n" +
                 "id\n" +
-                "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
-
+                "6,3,2";
+        Assertions.assertEquals(testCSV, loadCSVForTest());
     }
 
     @Test
     void testUpgradeEpicTask() {
-        EpicTask testEpicTask = new EpicTask("testEpicTask","testtest");
-        testEpicTask.setId(2);
-        manager.upgradeEpicTask(testEpicTask);
-        String testCSV ="Normal,1\n" +
+        super.testUpgradeEpicTask();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
                 "Epic,2\n" +
                 "id,title,description,status,startTime,duration,subId\n" +
-                "2,testEpicTask,testtest,New,null,0\n" +
+                "2,testEpictest,testtest,New,null,0\n" +
                 "6,secondEpic,,New,null,0,7\n" +
                 "Sub,1\n" +
                 "id,title,description,status,startTime,duration,epicId\n" +
                 "7,firstSub4,,New,null,0,6\n" +
                 "History,2\n" +
                 "id\n" +
-                "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
+                "6,2";
+        Assertions.assertEquals(testCSV, loadCSVForTest());
     }
 
     @Test
     void testClearAllTasks() {
-        manager.clearAllTasks();
-        String testCSV ="Normal,0\n" +
+        super.testClearAllTasks();
+        String testCSV = "Normal,0\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "Epic,0\n" +
                 "id,title,description,status,startTime,duration,subId\n" +
@@ -291,14 +301,13 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "2,6";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
-
+        Assertions.assertEquals(testCSV, loadCSVForTest());
     }
 
     @Test
     void testGetByIdNormalTask() {
-        manager.getByIdNormalTask(1);
-        String testCSV ="Normal,1\n" +
+        super.testGetByIdNormalTask();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
                 "Epic,2\n" +
@@ -314,14 +323,13 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "2,6,1";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
-
+        Assertions.assertEquals(testCSV, loadCSVForTest());
     }
 
     @Test
     void testGetByIdEpicTask() {
-        manager.getByIdEpicTask(2);
-        String testCSV ="Normal,1\n" +
+        super.testGetByIdEpicTask();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
                 "Epic,2\n" +
@@ -337,14 +345,13 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "6,2";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
-
+        Assertions.assertEquals(testCSV, loadCSVForTest());
     }
 
     @Test
     void testGetByIdSubTask() {
-        manager.getByIdSubTask(3);
-        String testCSV ="Normal,1\n" +
+        super.testGetByIdSubTask();
+        String testCSV = "Normal,1\n" +
                 "id,title,description,status,startTime,duration\n" +
                 "1,firstNormal,,New,1673031989903,15\n" +
                 "Epic,2\n" +
@@ -360,7 +367,13 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "2,6,3";
-        Assertions.assertEquals(testCSV,loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest());
+
+    }
+
+    @Test
+    void testChangeStatusEpicTask() {
+        super.testChangeStatusEpicTask();
 
     }
 
