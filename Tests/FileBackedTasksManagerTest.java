@@ -41,15 +41,14 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
     private String loadCSVForTest() {
         try {
             return Files.readString(Paths.get("history.csv"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException ignore) {}
+
         return null;
     }
 
     @Test
     void testLoadFromFile() {
-        FileBackedTasksManager testManager = FileBackedTasksManager.loadFromFile(Paths.get("testhistory.csv"));
+        FileBackedTasksManager testManager = FileBackedTasksManager.loadFromFile(Paths.get("TestRes/testhistory.csv"));
         List<Integer> testNormal = List.of(1);
         List<Integer> testEpic = List.of(2, 6);
         List<Integer> testSub = List.of(3, 4, 5, 7);
@@ -67,15 +66,60 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
     @Test
     void testLoadFromFileHistoryIsEmpty() {
         FileBackedTasksManager testManager =
-                FileBackedTasksManager.loadFromFile(Paths.get("testhistoryisempty.csv"));
+                FileBackedTasksManager.loadFromFile(Paths.get("TestRes/testhistoryisempty.csv"));
 
         Assertions.assertTrue(testManager.getHistory().isEmpty());
     }
 
     @Test
+    void testLoadFromFileHistoryErrorInNormal() {
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class,
+                () -> FileBackedTasksManager.loadFromFile(Paths.get("TestRes/errorindata/testhistoryerrorinnormal.csv")),
+                "Не выброшено исключение при ошибке в сроке файла истории");
+        Assertions.assertEquals("Не верное число элементов в строке Нормал тасков",
+                exception.getMessage(),"Сообщение исключения не правильное!");
+    }
+
+    @Test
+    void testLoadFromFileHistoryErrorInEpic() {
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class,
+                () -> FileBackedTasksManager.loadFromFile(Paths.get("TestRes/errorindata/testhistoryerrorinepic.csv")),
+                "Не выброшено исключение при ошибке в сроке файла истории");
+        Assertions.assertEquals("Не верное число элементов в строке Эпик тасков",
+                exception.getMessage(),"Сообщение исключения не правильное!");
+    }
+
+    @Test
+    void testLoadFromFileHistoryErrorInSub() {
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class,
+                () -> FileBackedTasksManager.loadFromFile(Paths.get("TestRes/errorindata/testhistoryerrorinsub.csv")),
+                "Не выброшено исключение при ошибке в сроке файла истории");
+        Assertions.assertEquals("Не верное число элементов в строке Саб тасков",
+                exception.getMessage(),"Сообщение исключения не правильное!");
+    }
+
+    @Test
+    void testLoadFromFileHistoryErrorInHistory() {
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class,
+                () -> FileBackedTasksManager.loadFromFile(Paths.get("TestRes/errorindata/testhistoryerrorinhistory.csv")),
+                "Не выброшено исключение при ошибке в сроке файла истории");
+        Assertions.assertEquals("Не верное число элементов в строке History",
+                exception.getMessage(),"Сообщение исключения не правильное!");
+    }
+
+    @Test
+    void testLoadFromFileHistoryErrorInType() {
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class,
+                () -> FileBackedTasksManager.loadFromFile(Paths.get("TestRes/errorindata/testhistoryerrorintype.csv")),
+                "Не выброшено исключение при ошибке в сроке файла истории");
+        Assertions.assertEquals("Не верное число элементов в строке Type",
+                exception.getMessage(),"Сообщение исключения не правильное!");
+    }
+
+    @Test
     void testLoadFromFileIsEmptyEpic() {
         FileBackedTasksManager testManager =
-                FileBackedTasksManager.loadFromFile(Paths.get("testhistoryisemptyepic.csv"));
+                FileBackedTasksManager.loadFromFile(Paths.get("TestRes/testhistoryisemptyepic.csv"));
 
         Assertions.assertTrue(testManager.getByIdEpicTask(6).getSubTasks().isEmpty()
                 ,"Эпик id 6 имеет не пустой лист сабов");
@@ -84,13 +128,25 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
     }
 
     @Test
-    void testLoadFromFileHistoryWithoutTask() {
-        FileBackedTasksManager testManager =
-                FileBackedTasksManager.loadFromFile(Paths.get("testhistorywithouttassk.csv"));
+    void testLoadFromFileHistoryWithoutTaskAndNotEmptyHistory() {
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class,
+                () -> FileBackedTasksManager.loadFromFile(Paths.get("TestRes/testhistorywithouttassk.csv")),
+                "Не выброшено исключение отсутствие загруженных Тасков при не пучтой истории");
+        Assertions.assertEquals("Таск 2 не был восстановлен из файла!",
+                exception.getMessage(),"Сообщение исключения не правильное!");
+    }
 
-        Assertions.assertTrue(testManager.getAllNormalTasks().isEmpty(),"");
-        Assertions.assertTrue(testManager.getAllSubTasks().isEmpty(),"");
-        Assertions.assertTrue(testManager.getAllEpicTasks().isEmpty(),"");
+    @Test
+    void testLoadFromFileHistoryWithoutTaskAndEmptyHistory() {
+        FileBackedTasksManager testManager =
+                FileBackedTasksManager.loadFromFile(Paths.get("TestRes/testhistoryisemptyall.csv"));
+
+        Assertions.assertTrue(testManager.getAllNormalTasks().isEmpty(),"NormalTasks не пустой");
+        Assertions.assertTrue(testManager.getAllSubTasks().isEmpty(),"SubTasks не пустой");
+        Assertions.assertTrue(testManager.getAllEpicTasks().isEmpty(),"EpicTasks не пустой");
+        Assertions.assertTrue(testManager.getHistory().isEmpty(),"History не пустой");
+        Assertions.assertTrue(testManager.getPrioritizedTasks().isEmpty(),"PrioritizedTasks не пустой");
+
     }
 
     @Test
@@ -111,7 +167,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "2,6";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Удаление Нормала не правильно отражено в файле");
     }
 
     @Test
@@ -129,7 +186,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,1\n" +
                 "id\n" +
                 "6";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Удаление Эпика не правильно отражено в файле");
     }
 
     @Test
@@ -150,7 +208,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "6,2";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Удаление Саба не правильно отражено в файле");
 
     }
 
@@ -174,7 +233,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "2,6,8";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Добавление Нормала не правильно отражено в файле");
 
     }
 
@@ -198,7 +258,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "2,6,8";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Добавление Эпика не правильно отражено в файле");
     }
 
     @Test
@@ -221,7 +282,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "6,8,2";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Добавление Саба не правильно отражено в файле");
 
     }
 
@@ -244,7 +306,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "2,6,1";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Обновление Нормала не правильно отражено в файле");
 
     }
 
@@ -267,7 +330,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "6,3,2";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Обновление Саба не правильно отражено в файле");
     }
 
     @Test
@@ -286,7 +350,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "6,2";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Обновление Эпика не правильно отражено в файле");
     }
 
     @Test
@@ -301,7 +366,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "2,6";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Удаление всех тасков не правильно отбражено в файле");
     }
 
     @Test
@@ -323,7 +389,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "2,6,1";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Получение Нормала не правильно отражено в файле");
     }
 
     @Test
@@ -345,7 +412,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,2\n" +
                 "id\n" +
                 "6,2";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Получение Эпика не правильно отражено в файле");
     }
 
     @Test
@@ -367,14 +435,36 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "History,3\n" +
                 "id\n" +
                 "2,6,3";
-        Assertions.assertEquals(testCSV, loadCSVForTest());
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Получение Саба не правильно отражено в файле");
 
     }
 
     @Test
     void testChangeStatusEpicTask() {
         super.testChangeStatusEpicTask();
-
+        String testCSV = "Normal,1\n" +
+                "id,title,description,status,startTime,duration\n" +
+                "1,firstNormal,,New,1673031989903,15\n" +
+                "Epic,3\n" +
+                "id,title,description,status,startTime,duration,subId\n" +
+                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
+                "6,secondEpic,,New,null,0,7\n" +
+                "8,epicTest,test test,In_progress,null,0,9,10,11\n" +
+                "Sub,7\n" +
+                "id,title,description,status,startTime,duration,epicId\n" +
+                "3,firstSub1,,New,1673032889903,15,2\n" +
+                "4,firstSub2,,New,1673033789903,15,2\n" +
+                "5,firstSub3,,New,null,0,2\n" +
+                "7,firstSub4,,New,null,0,6\n" +
+                "9,subTaskForTest1,,In_progress,null,0,8\n" +
+                "10,subTaskForTest2,,In_progress,null,0,8\n" +
+                "11,subTaskForTest3,,In_progress,null,0,8\n" +
+                "History,6\n" +
+                "id\n" +
+                "2,6,8,9,10,11";
+        Assertions.assertEquals(testCSV, loadCSVForTest(),
+                "Изменение статуса Саба не правильно отражено в файле");
     }
 
 }

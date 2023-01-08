@@ -73,10 +73,10 @@ public class InMemoryTaskManager implements TaskManager {
         if (!normalTasks.containsKey(id)) {
             throw new IllegalArgumentException("Попытка удалить Нормала по несуществующему id");
         }
-        prioritizedTasks.remove(normalTasks.get(id));
-        history.remove(normalTasks.get(id));
+        NormalTask normalTask = normalTasks.get(id);
+        prioritizedTasks.remove(normalTask);
+        history.remove(normalTask);
         normalTasks.remove(id);
-
     }
 
     @Override
@@ -86,8 +86,9 @@ public class InMemoryTaskManager implements TaskManager {
         }
         EpicTask epicTask = epicTasks.get(id);
         epicTask.getSubTasks().forEach(key -> {
-            prioritizedTasks.remove(subTasks.get(key));
-            history.remove(subTasks.get(key));
+            SubTask subTask = subTasks.get(key);
+            prioritizedTasks.remove(subTask);
+            history.remove(subTask);
             subTasks.remove(key);
         });
         prioritizedTasks.remove(epicTask);

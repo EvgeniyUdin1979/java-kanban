@@ -51,6 +51,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         int maxId = 0;
         while (currentLine < lines.size()) {
             String[] elementLine = lines.get(currentLine).split(",");
+            if (elementLine.length != 2){
+               throw new RuntimeException("Не верное число элементов в строке Type");
+            }
             LinesType type = LinesType.valueOf(elementLine[0]);
             int quantityLines = Integer.parseInt(elementLine[1]);
             if (quantityLines == 0) {
@@ -64,16 +67,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             switch (type) {
                 case Normal:
                     for (int i = 0; i < quantityLines; i++) {
-
                         String[] elementsLineNormal = lines.get(currentLine).split(",");
-                        try {
-                            if (elementsLineNormal.length !=6 ){
-                                throw new RuntimeException("Не верное число элементов в строке Нормал тасков");
-                            }
-                        }catch (RuntimeException e){
-                            e.printStackTrace();
-                            currentLine++;
-                            continue;
+                        if (elementsLineNormal.length != 6) {
+                            throw new RuntimeException("Не верное число элементов в строке Нормал тасков");
                         }
                         NormalTask normalTask = (NormalTask) manager.createTask(type, elementsLineNormal);
                         manager.normalTasks.put(normalTask.getId(), normalTask);
@@ -87,21 +83,14 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 case Epic:
                     for (int i = 0; i < quantityLines; i++) {
                         String[] elementsLineEpic = lines.get(currentLine).split(",");
-                        try {
-                            if (elementsLineEpic.length < 6 ){
-                                throw new RuntimeException("Не верное число элементов в строке Эпик тасков");
-                            }
-                        }catch (RuntimeException e){
-                            e.printStackTrace();
-                            currentLine++;
-                            continue;
+                        if (elementsLineEpic.length < 6) {
+                            throw new RuntimeException("Не верное число элементов в строке Эпик тасков");
                         }
                         EpicTask epicTask = (EpicTask) manager.createTask(type, elementsLineEpic);
                         if (elementsLineEpic.length > 6) {
                             for (int subId = 6; subId < elementsLineEpic.length; subId++) {
                                 epicTask.addSubTaskInList(Integer.parseInt(elementsLineEpic[subId]));
                             }
-
                         }
                         manager.epicTasks.put(epicTask.getId(), epicTask);
                         if (maxId < epicTask.getId()) {
@@ -114,14 +103,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 case Sub:
                     for (int i = 0; i < quantityLines; i++) {
                         String[] elementsLineSub = lines.get(currentLine).split(",");
-                        try {
-                            if (elementsLineSub.length !=7 ){
-                                throw new RuntimeException("Не верное число элементов в строке Саб тасков");
-                            }
-                        }catch (RuntimeException e){
-                            e.printStackTrace();
-                            currentLine++;
-                            continue;
+                        if (elementsLineSub.length != 7) {
+                            throw new RuntimeException("Не верное число элементов в строке Саб тасков");
                         }
                         SubTask subTask = (SubTask) manager.createTask(type, elementsLineSub);
                         subTask.setEpicTaskId(Integer.parseInt(elementsLineSub[6]));
@@ -134,25 +117,15 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     }
                     break;
                 case History:
+                    int quantityElements = Integer.parseInt(elementLine[1]);
                     String[] elementsLineHistory = lines.get(currentLine).split(",");
-                    try {
-                        if (elementsLineHistory.length < 1){
+                        if (elementsLineHistory.length != quantityElements) {
                             throw new RuntimeException("Не верное число элементов в строке History");
                         }
-                    }catch (RuntimeException e){
-                        e.printStackTrace();
-                        break;
-                    }
-                    for (int i = 0; i < Integer.parseInt(elementLine[1]); i++) {
+                    for (int i = 0; i < quantityElements; i++) {
                         int id = Integer.parseInt(elementsLineHistory[i]);
-                        try {
-                            if (!addedTasks.containsKey(id)){
-                                throw new RuntimeException("Таск " + id + " не был восстановлен из файла!");
-                            }
-                        }catch (RuntimeException e){
-                            e.printStackTrace();
-                            currentLine++;
-                            continue;
+                        if (!addedTasks.containsKey(id)) {
+                            throw new RuntimeException("Таск " + id + " не был восстановлен из файла!");
                         }
                         manager.history.add(addedTasks.get(id));
                     }
@@ -293,7 +266,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
     @Override
     public void deleteSubTaskById(int id) {
         super.deleteSubTaskById(id);
-            save();
+        save();
     }
 
     @Override
