@@ -5,6 +5,8 @@ import storetasks.EpicTask;
 import storetasks.NormalTask;
 import storetasks.SubTask;
 import storetasks.Task;
+import taskmangers.TaskManager;
+import taskmangers.erros.ManagerIllegalIdException;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -364,7 +366,7 @@ abstract class TaskManagerTest {
                 ,"После обновления старый Нормал не  должен находится в листе приоритетов!");
         Assertions.assertTrue(listPrioritizedTasks.contains(manager.getByIdNormalTask(1))
                 ,"После обновления новый Нормал  должен находится в листе приоритетов!");
-        IllegalArgumentException incorrectIDException = Assertions.assertThrows(IllegalArgumentException.class,
+        ManagerIllegalIdException incorrectIDException = Assertions.assertThrows(ManagerIllegalIdException.class,
                 () -> {
                     normalTaskForTest.setId(2);
                     manager.upgradeNormalTask(normalTaskForTest);
@@ -397,7 +399,7 @@ abstract class TaskManagerTest {
         Assertions.assertEquals(subTaskForTest, manager.getByIdSubTask(3));
         Assertions.assertSame(manager.getByIdEpicTask(2).getStatus(), In_progress);
 
-        IllegalArgumentException incorrectIDException = Assertions.assertThrows(IllegalArgumentException.class,
+        ManagerIllegalIdException incorrectIDException = Assertions.assertThrows(ManagerIllegalIdException.class,
                 () -> {
                     subTaskForTest.setId(2);
                     manager.upgradeSubTask(subTaskForTest);
@@ -431,7 +433,7 @@ abstract class TaskManagerTest {
             Assertions.assertFalse(manager.getHistory().stream()
                     .anyMatch(task -> subTasksEpicTask.contains(task.getId())));
         }
-        IllegalArgumentException incorrectIDException = Assertions.assertThrows(IllegalArgumentException.class,
+        ManagerIllegalIdException incorrectIDException = Assertions.assertThrows(ManagerIllegalIdException.class,
                 () -> {
                     epicTaskForTest.setId(3);
                     manager.upgradeEpicTask(epicTaskForTest);

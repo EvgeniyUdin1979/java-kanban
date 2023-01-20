@@ -1,3 +1,5 @@
+import taskmangers.InMemoryTaskManager;
+
 class InMemoryTaskManagerTest extends TaskManagerTest {
 
     public  InMemoryTaskManagerTest(){

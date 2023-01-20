@@ -1,3 +1,5 @@
+package taskmangers;
+
 public enum LinesType {
     Normal,
     Epic,

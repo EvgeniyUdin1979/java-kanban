@@ -1,6 +1,8 @@
 import storetasks.NormalTask;
 import storetasks.StatusTask;
 import storetasks.Task;
+import taskmangers.FileBackedTasksManager;
+import taskmangers.TaskManager;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -11,7 +13,7 @@ public class TestFileBackedTaskManager {
 //        Main.main(new String[]{});
 //    }
 
-    static TaskManager manager = FileBackedTasksManager.loadFromFile(Path.of("testhistoryiserrorquentityelements.csv"));
+    static TaskManager manager = FileBackedTasksManager.loadFromFile(Path.of("history.csv"));
 
     public static void main(String[] args) {
         getAllTasks().forEach(System.out::println);

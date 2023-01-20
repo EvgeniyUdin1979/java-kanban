@@ -1,13 +1,18 @@
+package taskmangers;
+
 import storetasks.*;
+import taskmangers.erros.ManagerSaveException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -18,7 +23,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         fileName = Path.of("history.csv");
     }
 
-    public void save() {
+    public void save() throws URISyntaxException {
         String text = getText();
         try {
             Files.deleteIfExists(fileName);
@@ -133,6 +138,14 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     break;
             }
         }
+        List<EpicTask> epicTasks = new ArrayList<>();
+        for (Task task : addedTasks.values()) {
+            prioritizedTasks.add(task);
+            if (task instanceof EpicTask){
+                epicTasks.add((EpicTask) task);
+            }
+        }
+        epicTasks.forEach(this::changeEpicTaskPriority);
         manager.globalId = ++maxId;
     }
 
@@ -155,7 +168,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         return task;
     }
 
-    private String getText() {
+    protected String getText() {
         StringBuilder sb = new StringBuilder();
         getTextFromNormalTasks(sb);
         getTextFromEpicTasks(sb);

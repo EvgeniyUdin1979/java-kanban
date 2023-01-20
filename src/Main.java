@@ -2,6 +2,8 @@ import storetasks.EpicTask;
 import storetasks.NormalTask;
 import storetasks.SubTask;
 import storetasks.Task;
+import taskmangers.Managers;
+import taskmangers.TaskManager;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -11,7 +13,7 @@ import java.util.Random;
 import static storetasks.StatusTask.*;
 
 public class Main {
-    static TaskManager manager =Managers.getDefault();
+    static TaskManager manager = Managers.getDefault();
 
     static {
         NormalTask normalTask = new NormalTask("firstNormal", New, LocalDateTime.now(),10L);

@@ -1,7 +1,10 @@
+package taskmangers;
+
 import storetasks.EpicTask;
 import storetasks.NormalTask;
 import storetasks.SubTask;
 import storetasks.Task;
+import taskmangers.erros.ManagerIllegalIdException;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -180,7 +183,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     public void upgradeNormalTask(NormalTask normalTask) {
         if (!normalTasks.containsKey(normalTask.getId())) {
-            throw new IllegalArgumentException("Попытка обновления Нормала по несуществующему id");
+            throw new ManagerIllegalIdException("Попытка обновления Нормала по несуществующему id");
         }
         NormalTask oldNormalTask = normalTasks.get(normalTask.getId());
         prioritizedTasks.remove(normalTasks.get(normalTask.getId()));
@@ -196,7 +199,7 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void upgradeSubTask(SubTask subTask) {
         if (!subTasks.containsKey(subTask.getId())) {
-            throw new IllegalArgumentException("Попытка обновления Саба по несуществующему id");
+            throw new ManagerIllegalIdException("Попытка обновления Саба по несуществующему id");
         }
         SubTask oldSubTask = subTasks.get(subTask.getId());
         prioritizedTasks.remove(subTasks.get(subTask.getId()));
@@ -218,7 +221,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     public void upgradeEpicTask(EpicTask epicTask) {
         if (!epicTasks.containsKey(epicTask.getId())) {
-            throw new IllegalArgumentException("Попытка обновления Эпика по несуществующему id");
+            throw new ManagerIllegalIdException("Попытка обновления Эпика по несуществующему id");
         }
         //Если приходит эпик в котором отличается набор сабов - те что отличаются надо удалить иначе,
         // они останутся не привязаны ни к одному эпику, на вебинаре была идея переиспользовать сабы,
@@ -262,7 +265,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    private void changeEpicTaskPriority(EpicTask epicTask) {
+    protected void changeEpicTaskPriority(EpicTask epicTask) {
         prioritizedTasks.remove(epicTask);
         updateStartTimeAndDurationEpicTask(epicTask);
         prioritizedTasks.add(epicTask);

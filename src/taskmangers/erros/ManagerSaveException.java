@@ -1,3 +1,5 @@
+package taskmangers.erros;
+
 public class ManagerSaveException extends RuntimeException {
     public ManagerSaveException() {
     }

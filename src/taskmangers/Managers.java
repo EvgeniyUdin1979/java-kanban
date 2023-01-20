@@ -1,6 +1,10 @@
+package taskmangers;
+
+import java.nio.file.Path;
+
 public class Managers {
     public static TaskManager getDefault() {
-        return new FileBackedTasksManager();
+        return FileBackedTasksManager.loadFromFile(Path.of("history.csv"));
     }
 
     public static HistoryManager getDefaultHistory() {

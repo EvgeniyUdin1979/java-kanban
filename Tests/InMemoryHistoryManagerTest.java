@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.Test;
 import storetasks.NormalTask;
 import storetasks.Task;
+import taskmangers.HistoryManager;
+import taskmangers.Managers;
 
 import java.util.List;
 

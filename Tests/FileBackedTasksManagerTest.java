@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import storetasks.Task;
+import taskmangers.FileBackedTasksManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -123,7 +124,7 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
 
         Assertions.assertTrue(testManager.getByIdEpicTask(6).getSubTasks().isEmpty()
                 ,"Эпик id 6 имеет не пустой лист сабов");
-        Assertions.assertTrue(testManager.epicTasks.containsKey(6)
+        Assertions.assertTrue(testManager.getAllEpicTasks().stream().anyMatch(epicTask -> epicTask.getId() == 6)
                 ,"Эпик id 6 отсутствует в мапе эпиков");
     }
 
