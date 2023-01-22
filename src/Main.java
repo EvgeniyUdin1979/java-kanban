@@ -2,18 +2,19 @@ import storetasks.EpicTask;
 import storetasks.NormalTask;
 import storetasks.SubTask;
 import storetasks.Task;
-import taskmangers.Managers;
+import taskmangers.FileBackedTasksManager;
+import taskmangers.HttpTaskManager;
 import taskmangers.TaskManager;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static storetasks.StatusTask.*;
 
 public class Main {
-    static TaskManager manager = Managers.getDefault();
+    static TaskManager manager = FileBackedTasksManager.loadFromFile(Path.of("history.csv"));
 
     static {
         NormalTask normalTask = new NormalTask("firstNormal", New, LocalDateTime.now(),10L);
@@ -42,6 +43,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        HttpTaskManager httpTaskManager = HttpTaskManager.loadFromServer("localhost");
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Начальная распечатка");
         printHistory();
@@ -97,24 +99,24 @@ public class Main {
 
         manager.deleteEpicTaskById(2);
         getAllTasks().forEach(System.out::println);
-        System.out.println("---------------------------------------------------Удаление эпик №2");
-        printHistory();
-        Random rnd = new Random();
-        Task task;
-        for (int i = 0; i < 30; i++) {
-            switch (rnd.nextInt(3)) {
-                case 0:
-                    task = manager.getByIdNormalTask(8);
-                    break;
-                case 1:
-                    task = manager.getByIdEpicTask(6);
-                    break;
-                case 2:
-                    task = manager.getByIdSubTask(7);
-                    break;
-            }
-        }
-        System.out.println("---------------------------------------------------Трогаю оставшиеся №6, №7, №8");
+//        System.out.println("---------------------------------------------------Удаление эпик №2");
+//        printHistory();
+//        Random rnd = new Random();
+//        Task task;
+//        for (int i = 0; i < 30; i++) {
+//            switch (rnd.nextInt(3)) {
+//                case 0:
+//                    task = manager.getByIdNormalTask(8);
+//                    break;
+//                case 1:
+//                    task = manager.getByIdEpicTask(6);
+//                    break;
+//                case 2:
+//                    task = manager.getByIdSubTask(7);
+//                    break;
+//            }
+//        }
+//        System.out.println("---------------------------------------------------Трогаю оставшиеся №6, №7, №8");
         printHistory();
         EpicTask epicTask = new EpicTask("twoEpic");
         manager.addEpicTask(epicTask);

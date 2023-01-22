@@ -30,4 +30,9 @@ public class InMemoryHistoryManager implements HistoryManager {
     public void remove(Task task) {
         history.remove(task);
     }
+
+    @Override
+    public void clear() {
+        history.clear();
+    }
 }

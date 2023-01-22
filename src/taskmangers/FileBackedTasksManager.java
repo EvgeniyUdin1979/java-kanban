@@ -5,7 +5,6 @@ import taskmangers.erros.ManagerSaveException;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,7 +22,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         fileName = Path.of("history.csv");
     }
 
-    public void save() throws URISyntaxException {
+    public void save() {
         String text = getText();
         try {
             Files.deleteIfExists(fileName);
@@ -50,7 +49,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
         loadFromFile(Path.of(fileName.toString()));
     }
 
-    private void restoreInformation(FileBackedTasksManager manager, List<String> lines) {
+    protected void restoreInformation(FileBackedTasksManager manager, List<String> lines) {
         HashMap<Integer, Task> addedTasks = new HashMap<>();
         int currentLine = 0;
         int maxId = 0;

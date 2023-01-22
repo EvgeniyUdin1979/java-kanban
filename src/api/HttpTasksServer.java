@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import storetasks.*;
+import taskmangers.HttpTaskManager;
 import taskmangers.Managers;
 import taskmangers.TaskManager;
 import taskmangers.erros.ManagerIllegalIdException;
@@ -24,22 +25,30 @@ public class HttpTasksServer {
     private static final Gson GSON = new GsonBuilder()
             .serializeNulls()
             .create();
-    private final static TaskManager manager = Managers.getDefault();
+    private static TaskManager manager;
+    int SERVER_PORT = 8080;
+    HttpServer server;
 
-    public static void main(String[] args) {
-        new HttpTasksServer().startServer();
+    public HttpTasksServer(HttpTaskManager httpTaskManager) {
+        manager = httpTaskManager;
+    }
+
+    public HttpTasksServer() {
+        manager = Managers.getDefault();
     }
 
     public void startServer() {
         try {
-            int SERVER_PORT = 8080;
-            HttpServer server = HttpServer.create(new InetSocketAddress(SERVER_PORT), 0);
+            server = HttpServer.create(new InetSocketAddress(SERVER_PORT), 0);
             server.createContext("/tasks", new ServerHandler());
             server.start();
         } catch (NullPointerException | IOException exception) { // обрабатываем ошибки отправки запроса
             System.out.println("Во время выполнения запроса возникла ошибка.\n" +
                     "Проверьте, пожалуйста, адрес и повторите попытку.");
         }
+    }
+    public void stop(){
+        server.stop(0);
     }
 
     static class ServerHandler implements HttpHandler {
@@ -66,7 +75,7 @@ public class HttpTasksServer {
                     }
                     break;
                 case "DELETE":
-                    if (splitURLPath.length == 3) {
+                    if (splitURLPath.length == 3 && splitURLPath[1].equals("tasks")) {
                         String queryRequest = exchange.getRequestURI().getQuery();
                         if (queryRequest != null) {
                             try {
@@ -85,12 +94,20 @@ public class HttpTasksServer {
                                     default:
                                         sendBadPathResponse(exchange);
                                 }
+                                sendGoodResponse(exchange);
+                                return;
                             } catch (ServerTaskIdException e) {
                                 break;
+                            }catch (IllegalArgumentException iae){
+                               String response = GSON.toJson("В запросе содержится неверный id " + queryRequest.split("=")[1]
+                                        + " . Проверьте путь и повторите запрос.");
+                                sendResponse(exchange, response, 400);
                             }
                         } else {
-                            manager.clearAllTasks();
-                            sendGoodResponse(exchange);
+                            if (splitURLPath[2].equals("task")) {
+                                manager.clearAllTasks();
+                                sendGoodResponse(exchange);
+                            }
                         }
                     }
                     sendBadPathResponse(exchange);
@@ -107,12 +124,11 @@ public class HttpTasksServer {
 
         private void createTaskFromRequest(HttpExchange exchange, String typeTask) throws IOException {
             String response;
-            byte[] body;
             try {
+                String body = new String(exchange.getRequestBody().readAllBytes());
                 switch (typeTask) {
                     case "task":
-                        body = exchange.getRequestBody().readAllBytes();
-                        NormalTask normalTask = GSON.fromJson(new String(body), NormalTask.class);
+                        NormalTask normalTask = GSON.fromJson(body, NormalTask.class);
                         findIllegalFieldsInTasks(normalTask);
                         if (normalTask.getId() > 0) {
                             manager.upgradeNormalTask(normalTask);
@@ -122,8 +138,7 @@ public class HttpTasksServer {
                         sendGoodResponse(exchange);
                         return;
                     case "subtask":
-                        body = exchange.getRequestBody().readAllBytes();
-                        SubTask subTask = GSON.fromJson(new String(body), SubTask.class);
+                        SubTask subTask = GSON.fromJson(body, SubTask.class);
                         findIllegalFieldsInTasks(subTask);
                         if (subTask.getId() > 0) {
                             manager.upgradeSubTask(subTask);
@@ -133,8 +148,7 @@ public class HttpTasksServer {
                         sendGoodResponse(exchange);
                         return;
                     case "epic":
-                        body = exchange.getRequestBody().readAllBytes();
-                        EpicTask epicTask = GSON.fromJson(new String(body), EpicTask.class);
+                        EpicTask epicTask = GSON.fromJson(body, EpicTask.class);
                         findIllegalFieldsInTasks(epicTask);
                         if (epicTask.getId() > 0) {
                             manager.upgradeEpicTask(epicTask);
@@ -206,7 +220,7 @@ public class HttpTasksServer {
                 } else {
                     for (EpicTask epicTask : epicTasks) {
                         if (epicTask.getId() == subTask.getEpicTaskId()) {
-                            if (epicTask.getSubTasks().stream().noneMatch(integer -> integer == subTask.getId())) {
+                            if (subTask.getId() != 0 && epicTask.getSubTasks().stream().noneMatch(integer -> integer == subTask.getId())) {
                                 throw new JsonSyntaxException("Cабтаска содержит id эпика которому не принадлежит.");
                             }
                         }

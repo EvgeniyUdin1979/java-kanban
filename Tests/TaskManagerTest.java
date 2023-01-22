@@ -18,7 +18,7 @@ import static storetasks.StatusTask.*;
 
 abstract class TaskManagerTest {
     //startTime for all test Task 1673021189903
-    static Clock startTestTime = Clock.fixed(Instant.ofEpochMilli(1673021189903L), ZoneId.systemDefault());
+    protected final static Clock startTestTime = Clock.fixed(Instant.ofEpochMilli(1673021189903L), ZoneId.systemDefault());
     TaskManager manager;
 
 
@@ -49,6 +49,9 @@ abstract class TaskManagerTest {
         SubTask subTask4 = new SubTask("firstSub4", New, epicTaskTwo.getId());
         manager.addSubTask(subTask4);
     }
+
+
+
 
     @Test
     void testGetAllNormalTasks() {
@@ -357,15 +360,15 @@ abstract class TaskManagerTest {
         normalTaskForUpdate.setId(1);
         manager.upgradeNormalTask(normalTaskForUpdate);
         Assertions.assertNotEquals(oldNormalTask, normalTaskForUpdate
-                ,"После обновления Нормал должны отличатся!");
+                , "После обновления Нормал должны отличатся!");
         NormalTask normalTaskForTest = new NormalTask("testNormaltest", "testtest", In_progress);
         normalTaskForTest.setId(1);
         Assertions.assertEquals(normalTaskForTest, manager.getByIdNormalTask(1), "");
-        List <Task> listPrioritizedTasks = manager.getPrioritizedTasks();
+        List<Task> listPrioritizedTasks = manager.getPrioritizedTasks();
         Assertions.assertFalse(listPrioritizedTasks.contains(oldNormalTask)
-                ,"После обновления старый Нормал не  должен находится в листе приоритетов!");
+                , "После обновления старый Нормал не  должен находится в листе приоритетов!");
         Assertions.assertTrue(listPrioritizedTasks.contains(manager.getByIdNormalTask(1))
-                ,"После обновления новый Нормал  должен находится в листе приоритетов!");
+                , "После обновления новый Нормал  должен находится в листе приоритетов!");
         ManagerIllegalIdException incorrectIDException = Assertions.assertThrows(ManagerIllegalIdException.class,
                 () -> {
                     normalTaskForTest.setId(2);
@@ -451,13 +454,13 @@ abstract class TaskManagerTest {
     }
 
     @Test
-    void testGetPrioritizedTasks(){
+    void testGetPrioritizedTasks() {
         List<Task> listPrioritizedTasks = manager.getPrioritizedTasks();
-        Assertions.assertNotNull(listPrioritizedTasks,"getPrioritizedTasks() возвращает null");
+        Assertions.assertNotNull(listPrioritizedTasks, "getPrioritizedTasks() возвращает null");
         Assertions.assertFalse(listPrioritizedTasks.isEmpty()
-                ,"getPrioritizedTasks() возвращает пустой лист");
-       Assertions.assertSame(listPrioritizedTasks.size(),7
-               ,"getPrioritizedTasks() возвращает лист не правильного размера!");
+                , "getPrioritizedTasks() возвращает пустой лист");
+        Assertions.assertSame(listPrioritizedTasks.size(), 7
+                , "getPrioritizedTasks() возвращает лист не правильного размера!");
 
 
     }

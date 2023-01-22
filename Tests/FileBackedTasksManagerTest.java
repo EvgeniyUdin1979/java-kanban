@@ -364,9 +364,8 @@ class FileBackedTasksManagerTest extends TaskManagerTest {
                 "id,title,description,status,startTime,duration,subId\n" +
                 "Sub,0\n" +
                 "id,title,description,status,startTime,duration,epicId\n" +
-                "History,2\n" +
-                "id\n" +
-                "2,6";
+                "History,0\n" +
+                "id\n";
         Assertions.assertEquals(testCSV, loadCSVForTest(),
                 "Удаление всех тасков не правильно отбражено в файле");
     }

@@ -36,6 +36,13 @@ public class CustomLinkedList {
         }
     }
 
+    public void clear(){
+        historyMap.clear();
+        tail =null;
+        head = null;
+        size = 0;
+    }
+
     public void remove(Task t) {
         if (historyMap.isEmpty() || t == null || !historyMap.containsKey(t.getId())) {
             return;

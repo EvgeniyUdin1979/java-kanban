@@ -69,6 +69,7 @@ public class InMemoryTaskManager implements TaskManager {
         epicTasks.clear();
         subTasks.clear();
         prioritizedTasks.clear();
+        history.clear();
     }
 
     @Override
@@ -327,7 +328,6 @@ public class InMemoryTaskManager implements TaskManager {
         if (lowerTask instanceof EpicTask && lowerTask.getStartTime() != null) {
             lowerTask = getSubTaskFromEpicTask((EpicTask) lowerTask);
         }
-        LocalDateTime startTimeLowerTask = formatTimeForChecking(lowerTask, lowerTask.getStartTime());
         LocalDateTime endTimeLowerTask = formatTimeForChecking(lowerTask, lowerTask.getEndTime());
         return startTimeTestingTask.isBefore(endTimeLowerTask);
     }
@@ -337,7 +337,6 @@ public class InMemoryTaskManager implements TaskManager {
             ceilingTask = getSubTaskFromEpicTask((EpicTask) ceilingTask);
         }
         LocalDateTime startTimeCeilingTask = formatTimeForChecking(ceilingTask, ceilingTask.getStartTime());
-//          LocalDateTime endTimeCeilingTask = formatTimeForChecking(ceilingTask, ceilingTask.getEndTime());
 
         if (startTimeCeilingTask
                 .equals(startTimeTestingTask)) {
@@ -373,6 +372,5 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Task> getHistory() {
         return history.getHistory();
     }
-
 
 }
