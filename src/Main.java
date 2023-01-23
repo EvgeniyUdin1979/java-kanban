@@ -43,7 +43,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        HttpTaskManager httpTaskManager = HttpTaskManager.loadFromServer("localhost");
+        HttpTaskManager httpTaskManager = new HttpTaskManager("localhost");
         getAllTasks().forEach(System.out::println);
         System.out.println("---------------------------------------------------Начальная распечатка");
         printHistory();

@@ -22,7 +22,7 @@ class HttpTasksServerTest extends HttpTaskManagerTest {
 
     Gson gson = Managers.getDefaultGson();
 
-    public HttpResponse<String> createClient(String path, METHOD method, String json) {
+    private HttpResponse<String> createClient(String path, METHOD method, String json) {
         try {
             HttpClient client = HttpClient.newHttpClient();
             URI uri = new URI("http://localhost:8080/" + path);

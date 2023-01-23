@@ -2,12 +2,19 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import storetasks.Task;
 import taskmangers.HttpTaskManager;
-import taskmangers.erros.ManagerLoadException;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
 class HttpTaskManagerTest extends TaskManagerTest {
 
@@ -19,12 +26,36 @@ class HttpTaskManagerTest extends TaskManagerTest {
     }
 
     @BeforeEach
-    public void deleteCSV(){
+    public void deleteCSV() {
         try {
             Files.deleteIfExists(Path.of("history.csv"));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private HttpResponse<String> createClient(String key) {
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            URI uri = new URI("http://localhost:8078/load/" + key + "?API_TOKEN=DEBUG");
+            HttpRequest request = HttpRequest.newBuilder(uri).build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            return response;
+        } catch (URISyntaxException | InterruptedException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    public void testDeserialization(){
+        HttpTaskManager testHttpTaskManager = new HttpTaskManager("localhost");
+        testHttpTaskManager.createKVClient();
+        testHttpTaskManager.load();
+
+        Assertions.assertEquals(7,testHttpTaskManager.getPrioritizedTasks().size(),
+                "Колличество тасков отличается после десериализации");
+        Assertions.assertEquals(List.of(2,6), testHttpTaskManager.getHistory().stream().map(Task::getId).collect(Collectors.toList()),
+                "История содерфит не правильные таски после десериализации");
     }
 
     @AfterEach
@@ -36,61 +67,27 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testClearAllTasks() {
         super.testClearAllTasks();
-        String testCSV = "Normal,0\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "Epic,0\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "Sub,0\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "History,0\n" +
-                "id\n";
-        Assertions.assertThrows(ManagerLoadException.class,
-                () -> {
-            httpTaskManager.load();
-                },"Не выброшено исключение на отсутствие файла сохраненной на диске истории, " +
-                        "после не удачной загрузки с сервера.");
+        Assertions.assertEquals("[]",createClient("task").body());
+        Assertions.assertEquals("[]",createClient("subtask").body());
+        Assertions.assertEquals("[]",createClient("epic").body());
+        Assertions.assertEquals("[]",createClient("history").body());
     }
 
     @Test
     @Override
     void testDeleteNormalTaskById() {
         super.testDeleteNormalTaskById();
-        String testCSV = "Normal,0\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,4\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,2\n" +
-                "id\n" +
-                "2,6";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[]",createClient("task").body(),
                 "Удаление Нормала не правильно отражено на сервере!");
+
     }
 
     @Test
     @Override
     void testDeleteEpicTaskById() {
         super.testDeleteEpicTaskById();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,1\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,1\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,1\n" +
-                "id\n" +
-                "6";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[{\"subTasks\":[7],\"id\":6,\"title\":\"secondEpic\",\"description\":\"\",\"status\":\"New\",\"duration\":0}]",
+                createClient("epic").body(),
                 "Удаление Эпика не правильно отражено на сервере!");
     }
 
@@ -98,22 +95,8 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testDeleteSubTaskById() {
         super.testDeleteSubTaskById();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,3\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,2\n" +
-                "id\n" +
-                "6,2";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[{\"epicTaskId\":2,\"id\":4,\"title\":\"firstSub2\",\"description\":\"\",\"status\":\"New\",\"startTime\":{\"date\":{\"year\":2023,\"month\":1,\"day\":6},\"time\":{\"hour\":19,\"minute\":36,\"second\":29,\"nano\":903000000}},\"duration\":15},{\"epicTaskId\":2,\"id\":5,\"title\":\"firstSub3\",\"description\":\"\",\"status\":\"New\",\"duration\":0},{\"epicTaskId\":6,\"id\":7,\"title\":\"firstSub4\",\"description\":\"\",\"status\":\"New\",\"duration\":0}]",
+                createClient("subtask").body(),
                 "Удаление Саба не правильно отражено на сервере!");
     }
 
@@ -121,23 +104,7 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testGetByIdNormalTask() {
         super.testGetByIdNormalTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,4\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,3\n" +
-                "id\n" +
-                "2,6,1";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[2,6,1]",createClient("history").body(),
                 "Получение Нормала не правильно отражено на сервере!");
     }
 
@@ -145,23 +112,7 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testGetByIdEpicTask() {
         super.testGetByIdEpicTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,4\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,2\n" +
-                "id\n" +
-                "6,2";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[6,2]",createClient("history").body(),
                 "Получение Эпика не правильно отражено на сервере!");
     }
 
@@ -169,23 +120,7 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testGetByIdSubTask() {
         super.testGetByIdSubTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,4\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,3\n" +
-                "id\n" +
-                "2,6,3";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[2,6,3]",createClient("history").body(),
                 "Получение Саба не правильно отражено на сервере!");
     }
 
@@ -193,24 +128,8 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testAddNormalTask() {
         super.testAddNormalTask();
-        String testCSV = "Normal,2\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "8,normalTest,test test,New,1673035589903,20\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,4\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,3\n" +
-                "id\n" +
-                "2,6,8";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[{\"id\":1,\"title\":\"firstNormal\",\"description\":\"\",\"status\":\"New\",\"startTime\":{\"date\":{\"year\":2023,\"month\":1,\"day\":6},\"time\":{\"hour\":19,\"minute\":6,\"second\":29,\"nano\":903000000}},\"duration\":15},{\"id\":8,\"title\":\"normalTest\",\"description\":\"test test\",\"status\":\"New\",\"startTime\":{\"date\":{\"year\":2023,\"month\":1,\"day\":6},\"time\":{\"hour\":20,\"minute\":6,\"second\":29,\"nano\":903000000}},\"duration\":20}]",
+                createClient("task").body(),
                 "Добавление Нормала не правильно отражено на сервере!");
     }
 
@@ -218,51 +137,17 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testAddEpicTask() {
         super.testAddEpicTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,3\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "8,epicTest,test test,New,null,0\n" +
-                "Sub,4\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,3\n" +
-                "id\n" +
-                "2,6,8";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+
+        Assertions.assertEquals("[{\"subTasks\":[3,4,5],\"id\":2,\"title\":\"firstEpic\",\"description\":\"\",\"status\":\"New\",\"startTime\":{\"date\":{\"year\":2023,\"month\":1,\"day\":6},\"time\":{\"hour\":19,\"minute\":21,\"second\":28,\"nano\":903000000}},\"duration\":30},{\"subTasks\":[7],\"id\":6,\"title\":\"secondEpic\",\"description\":\"\",\"status\":\"New\",\"duration\":0},{\"subTasks\":[],\"id\":8,\"title\":\"epicTest\",\"description\":\"test test\",\"status\":\"New\",\"duration\":0}]",
+                createClient("epic").body(),
                 "Добавление Эпика не правильно отражено на сервере!");
     }
     @Test
     @Override
     void testChangeStatusEpicTask() {
         super.testChangeStatusEpicTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,3\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "8,epicTest,test test,In_progress,null,0,9,10,11\n" +
-                "Sub,7\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "9,subTaskForTest1,,In_progress,null,0,8\n" +
-                "10,subTaskForTest2,,In_progress,null,0,8\n" +
-                "11,subTaskForTest3,,In_progress,null,0,8\n" +
-                "History,6\n" +
-                "id\n" +
-                "2,6,8,9,10,11";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[{\"subTasks\":[3,4,5],\"id\":2,\"title\":\"firstEpic\",\"description\":\"\",\"status\":\"New\",\"startTime\":{\"date\":{\"year\":2023,\"month\":1,\"day\":6},\"time\":{\"hour\":19,\"minute\":21,\"second\":28,\"nano\":903000000}},\"duration\":30},{\"subTasks\":[7],\"id\":6,\"title\":\"secondEpic\",\"description\":\"\",\"status\":\"New\",\"duration\":0},{\"subTasks\":[9,10,11],\"id\":8,\"title\":\"epicTest\",\"description\":\"test test\",\"status\":\"In_progress\",\"duration\":0}]",
+                createClient("epic").body(),
                 "Изменение статуса Саба не правильно отражено на сервере!");
     }
 
@@ -270,24 +155,8 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testAddSubTask() {
         super.testAddSubTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5,8\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,5\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "8,subTaskForTest,test test,New,null,0,2\n" +
-                "History,3\n" +
-                "id\n" +
-                "6,8,2";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[{\"epicTaskId\":2,\"id\":3,\"title\":\"firstSub1\",\"description\":\"\",\"status\":\"New\",\"startTime\":{\"date\":{\"year\":2023,\"month\":1,\"day\":6},\"time\":{\"hour\":19,\"minute\":21,\"second\":29,\"nano\":903000000}},\"duration\":15},{\"epicTaskId\":2,\"id\":4,\"title\":\"firstSub2\",\"description\":\"\",\"status\":\"New\",\"startTime\":{\"date\":{\"year\":2023,\"month\":1,\"day\":6},\"time\":{\"hour\":19,\"minute\":36,\"second\":29,\"nano\":903000000}},\"duration\":15},{\"epicTaskId\":2,\"id\":5,\"title\":\"firstSub3\",\"description\":\"\",\"status\":\"New\",\"duration\":0},{\"epicTaskId\":6,\"id\":7,\"title\":\"firstSub4\",\"description\":\"\",\"status\":\"New\",\"duration\":0},{\"epicTaskId\":2,\"id\":8,\"title\":\"subTaskForTest\",\"description\":\"test test\",\"status\":\"New\",\"duration\":0}]",
+                createClient("subtask").body(),
                 "Добавление Саба не правильно отражено на сервере!");
     }
 
@@ -295,23 +164,8 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testUpgradeNormalTask() {
         super.testUpgradeNormalTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,testNormaltest,testtest,In_progress,null,0\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,New,1673032888903,30,3,4,5\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,4\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,firstSub1,,New,1673032889903,15,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,3\n" +
-                "id\n" +
-                "2,6,1";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[{\"id\":1,\"title\":\"testNormaltest\",\"description\":\"testtest\",\"status\":\"In_progress\",\"duration\":0}]",
+                createClient("task").body(),
                 "Обновление Нормала не правильно отражено на сервере!");
     }
 
@@ -319,23 +173,8 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testUpgradeSubTask() {
         super.testUpgradeSubTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,firstEpic,,In_progress,1673033788903,15,4,5,3\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,4\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "3,subTest,test,In_progress,null,0,2\n" +
-                "4,firstSub2,,New,1673033789903,15,2\n" +
-                "5,firstSub3,,New,null,0,2\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,3\n" +
-                "id\n" +
-                "6,3,2";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[{\"epicTaskId\":2,\"id\":3,\"title\":\"subTest\",\"description\":\"test\",\"status\":\"In_progress\",\"duration\":0},{\"epicTaskId\":2,\"id\":4,\"title\":\"firstSub2\",\"description\":\"\",\"status\":\"New\",\"startTime\":{\"date\":{\"year\":2023,\"month\":1,\"day\":6},\"time\":{\"hour\":19,\"minute\":36,\"second\":29,\"nano\":903000000}},\"duration\":15},{\"epicTaskId\":2,\"id\":5,\"title\":\"firstSub3\",\"description\":\"\",\"status\":\"New\",\"duration\":0},{\"epicTaskId\":6,\"id\":7,\"title\":\"firstSub4\",\"description\":\"\",\"status\":\"New\",\"duration\":0}]",
+                createClient("subtask").body(),
                 "Обновление Саба не правильно отражено на сервере!");
     }
 
@@ -343,20 +182,8 @@ class HttpTaskManagerTest extends TaskManagerTest {
     @Override
     void testUpgradeEpicTask() {
         super.testUpgradeEpicTask();
-        String testCSV = "Normal,1\n" +
-                "id,title,description,status,startTime,duration\n" +
-                "1,firstNormal,,New,1673031989903,15\n" +
-                "Epic,2\n" +
-                "id,title,description,status,startTime,duration,subId\n" +
-                "2,testEpictest,testtest,New,null,0\n" +
-                "6,secondEpic,,New,null,0,7\n" +
-                "Sub,1\n" +
-                "id,title,description,status,startTime,duration,epicId\n" +
-                "7,firstSub4,,New,null,0,6\n" +
-                "History,2\n" +
-                "id\n" +
-                "6,2";
-        Assertions.assertEquals(testCSV, httpTaskManager.load(),
+        Assertions.assertEquals("[{\"subTasks\":[],\"id\":2,\"title\":\"testEpictest\",\"description\":\"testtest\",\"status\":\"New\",\"duration\":0},{\"subTasks\":[7],\"id\":6,\"title\":\"secondEpic\",\"description\":\"\",\"status\":\"New\",\"duration\":0}]",
+                createClient("epic").body(),
                 "Обновление Эпика не правильно отражено на сервере!");
     }
 }

@@ -1,9 +1,10 @@
 import storetasks.NormalTask;
 import storetasks.StatusTask;
 import storetasks.Task;
-import taskmangers.HttpTaskManager;
+import taskmangers.FileBackedTasksManager;
 import taskmangers.TaskManager;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,8 +13,8 @@ public class TestFileBackedTaskManager {
 //        Main.main(new String[]{});
 //    }
 
-//    static TaskManager manager = FileBackedTasksManager.loadFromServer(Path.of("history.csv"));
-    static TaskManager manager = HttpTaskManager.loadFromServer(("localhost"));
+    static TaskManager manager = FileBackedTasksManager.loadFromFile(Path.of("history.csv"));
+//    static TaskManager manager = HttpTaskManager.loadFromServer(("localhost"));
 
 
     public static void main(String[] args) {

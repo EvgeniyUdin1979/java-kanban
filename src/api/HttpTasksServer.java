@@ -169,8 +169,6 @@ public class HttpTasksServer {
             } catch (ManagerIllegalIdException mie) {
                 response = GSON.toJson("Ошибка во время десерриализации. Указан не верный id задачи" +
                         ". Проверьте вложенный Json и повторите запрос.");
-            } catch (NullPointerException jse) {
-                response = GSON.toJson("Ошибка во время десерриализации. Отсутствуют необходимые поля. Проверьте вложенный Json и повторите запрос.");
             }
             sendResponse(exchange, response, 400);
         }

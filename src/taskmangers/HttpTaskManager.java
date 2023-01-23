@@ -2,53 +2,47 @@ package taskmangers;
 
 import api.HttpTasksServer;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import kvserver.KVServer;
-import taskmangers.erros.HttpManagerConnectException;
-import taskmangers.erros.ManagerLoadException;
+import kvserver.KVTaskClient;
+import storetasks.EpicTask;
+import storetasks.NormalTask;
+import storetasks.SubTask;
+import storetasks.Task;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class HttpTaskManager extends FileBackedTasksManager {
     private String url;
-    private final HttpClient client;
-    private String key;
-    private String API_TOKEN;
-    private final int PORT;
     private KVServer kvServer;
     HttpTasksServer tasksServer;
+    KVTaskClient kvTaskClient;
     Gson gson;
 
     public HttpTaskManager(String url) {
         this.url = url;
-        PORT = 8078;
-        client = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .build();
         gson = new Gson();
-        key = "first";
+    }
+    public void createKVClient(){
+        kvTaskClient = new KVTaskClient(url);
     }
 
     public static void main(String[] args) {
         new HttpTaskManager("localhost").startServers();
     }
-    public void startServers(){
-//        System.out.println("start");
-            kvServer = new KVServer();
-            kvServer.start();
-            tasksServer = new HttpTasksServer(this);
-            tasksServer.startServer();
-            register();
+
+    public void startServers() {
+        kvServer = new KVServer();
+        kvServer.start();
+        tasksServer = new HttpTasksServer(this);
+        tasksServer.startServer();
+        kvTaskClient = new KVTaskClient("localhost");
     }
-    public void stopServers(){
+
+    public void stopServers() {
         System.out.println("stop servers");
         kvServer.stop();
         tasksServer.stop();
@@ -58,85 +52,59 @@ public class HttpTaskManager extends FileBackedTasksManager {
         this.url = url;
     }
 
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public static HttpTaskManager loadFromServer(String url) {
-        HttpTaskManager manager = new HttpTaskManager(url);
-        String history = manager.load();
-        if (history != null) {
-            manager.restoreInformation(manager, List.of(history.split("\\r\\n|\\n")));
-        }
-        return manager;
-    }
 
     @Override
     public void save() {
-        String text = gson.toJson(getText(), String.class);
-        try {
-            URI uri = new URI("http://" + url + ":" + PORT + "/save/" + key + "?API_TOKEN=" + API_TOKEN);
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(uri)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(text, StandardCharsets.UTF_8))
-                    .build();
-            client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-        } catch (URISyntaxException | IOException | InterruptedException e) {
-            stopServers();
-            throw new HttpManagerConnectException("Проблемы во время соединения с KVServer.");
-        }
+        super.save();
+        kvTaskClient.put("task", gson.toJson(getAllNormalTasks(),new TypeToken<ArrayList<NormalTask>>() {
+        }.getType()));
+        kvTaskClient.put("subtask", gson.toJson(getAllSubTasks(),new TypeToken<ArrayList<SubTask>>() {
+        }.getType()));
+        kvTaskClient.put("epic", gson.toJson(getAllEpicTasks(),new TypeToken<ArrayList<EpicTask>>() {
+        }.getType()));
+
+        List<Integer> list = getHistory().stream().map(Task::getId).collect(Collectors.toList());
+        kvTaskClient.put("history", gson.toJson(list,new TypeToken<ArrayList<Integer>>() {
+        }.getType()));
+        kvTaskClient.put("globalid", String.valueOf(globalId));
     }
 
-    @Override
-    public void clearAllTasks() {
-        super.clearAllTasks();
-        try {
-            URI uri = new URI("http://" + url + ":" + PORT + "/clear/"+ "?API_TOKEN=" + API_TOKEN);
-            HttpRequest request = HttpRequest.newBuilder(uri).DELETE().build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (URISyntaxException | InterruptedException | IOException e) {
-            stopServers();
-            throw new HttpManagerConnectException("Проблемы во время соединения с KVServer.");
+
+
+    public void load() {
+        HashMap<Integer,Task> allTasks = new HashMap<>();
+        String task = kvTaskClient.load("task");
+        List<NormalTask> deserializationNormalTask = gson.fromJson(task,
+                new TypeToken<ArrayList<NormalTask>>() {
+                }.getType());
+        deserializationNormalTask.forEach(normalTask ->
+        {
+            normalTasks.put(normalTask.getId(), normalTask);
+            allTasks.put(normalTask.getId(), normalTask);
+        });
+
+        List<SubTask> deserializationSubTask = gson.fromJson(kvTaskClient.load("subtask"),
+                new TypeToken<ArrayList<SubTask>>() {
+                }.getType());
+        deserializationSubTask.forEach(subTask -> {
+            subTasks.put(subTask.getId(), subTask);
+            allTasks.put(subTask.getId(), subTask);
+        });
+        List<EpicTask> deserializationEpicTask = gson.fromJson(kvTaskClient.load("epic"),
+                new TypeToken<ArrayList<EpicTask>>() {
+                }.getType());
+        deserializationEpicTask.forEach(epicTask ->{
+            epicTasks.put(epicTask.getId(), epicTask);
+            allTasks.put(epicTask.getId(), epicTask);
         }
-    }
-
-    public void register() {
-        try {
-            URI uri = new URI("http://" + url + ":" + PORT + "/register");
-            HttpResponse<String> response = client.send(HttpRequest.newBuilder(uri).build(),
-                    HttpResponse.BodyHandlers.ofString());
-            this.API_TOKEN = response.body();
-        } catch (IOException | URISyntaxException | InterruptedException e) {
-            stopServers();
-            throw new HttpManagerConnectException("Проблемы во время соединения с KVServer.");
+        );
+        List<Integer> deserializationHistory = gson.fromJson(kvTaskClient.load("history"),
+                new TypeToken<ArrayList<Integer>>() {
+                }.getType());
+        for (Integer taskId : deserializationHistory) {
+            history.add(allTasks.get(taskId));
         }
-    }
-
-    public String load() {
-        try {
-            URI uri = new URI("http://" + url + ":" + PORT + "/load/" + key + "?API_TOKEN=" + API_TOKEN);
-            HttpRequest request = HttpRequest.newBuilder(uri).build();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            int lengthContent = Integer.parseInt(response.headers().firstValue("Content-length").orElse("0"));
-            String body = null;
-            if (lengthContent > 0) {
-                body = gson.fromJson(response.body(), String.class);
-            } else {
-                try {
-                    body = Files.readString(Path.of("history.csv"));
-                } catch (IOException ex) {
-                    throw new ManagerLoadException("Ошибка загрузки из файла!");
-                }
-
-            }
-            return body;
-        } catch (URISyntaxException | InterruptedException | IOException e) {
-            stopServers();
-            throw new HttpManagerConnectException("Проблемы во время соединения с KVServer.");
-        }
-
+        prioritizedTasks.addAll(allTasks.values());
     }
 
 
